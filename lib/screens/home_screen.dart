@@ -144,6 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
+        shrinkWrap: true,
         children: [
           // Dynamic Drawer Header with Settings
           Consumer<SettingsProvider>(
