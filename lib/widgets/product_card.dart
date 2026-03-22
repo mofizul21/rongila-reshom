@@ -131,35 +131,6 @@ class ProductCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
-              // Right: Prices (aligned to right)
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '৳${product.salePrice.toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: AppFontWeights.bold,
-                        color: Colors.green[700],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Cost: ৳${product.purchasePrice.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: AppFontSizes.sm,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),

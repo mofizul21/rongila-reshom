@@ -30,9 +30,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _purchasePriceController = TextEditingController(
       text: widget.product?.purchasePrice.toString() ?? '',
     );
-    _salePriceController = TextEditingController(
-      text: widget.product?.salePrice.toString() ?? '',
-    );
     _quantityController = TextEditingController(
       text: widget.product?.quantity.toString() ?? '',
     );
@@ -45,7 +42,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   void dispose() {
     _titleController.dispose();
     _purchasePriceController.dispose();
-    _salePriceController.dispose();
     _quantityController.dispose();
     _imageUrlController.dispose();
     _descriptionController.dispose();
@@ -77,7 +73,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       await productProvider.addProduct(
         title: _titleController.text.trim(),
         purchasePrice: double.tryParse(_purchasePriceController.text) ?? 0,
-        salePrice: double.tryParse(_salePriceController.text) ?? 0,
         quantity: int.tryParse(_quantityController.text) ?? 0,
         imageUrl: _imageUrlController.text.trim().isEmpty
             ? null
@@ -93,7 +88,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         id: widget.product!.id,
         title: _titleController.text.trim(),
         purchasePrice: double.tryParse(_purchasePriceController.text) ?? 0,
-        salePrice: double.tryParse(_salePriceController.text) ?? 0,
         quantity: int.tryParse(_quantityController.text) ?? 0,
         imageUrl: _imageUrlController.text.trim().isEmpty
             ? null
@@ -184,24 +178,15 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: TextFormField(
-                    controller: _salePriceController,
+                    controller: _quantityController,
                     decoration: const InputDecoration(
-                      labelText: 'Sale Price',
-                      prefixIcon: Icon(Icons.money),
+                      labelText: 'Quantity',
+                      prefixIcon: Icon(Icons.inventory),
                     ),
                     keyboardType: TextInputType.number,
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _quantityController,
-              decoration: const InputDecoration(
-                labelText: 'Quantity',
-                prefixIcon: Icon(Icons.inventory),
-              ),
-              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             // Image URL with Preview

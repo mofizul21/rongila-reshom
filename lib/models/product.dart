@@ -4,7 +4,6 @@ class Product {
   final String id;
   final String title;
   final double purchasePrice;
-  final double salePrice;
   final int quantity;
   final String? imageUrl;
   final String? categoryId;
@@ -17,7 +16,6 @@ class Product {
     required this.id,
     required this.title,
     required this.purchasePrice,
-    required this.salePrice,
     required this.quantity,
     this.imageUrl,
     this.categoryId,
@@ -33,7 +31,6 @@ class Product {
       id: doc.id,
       title: data['title'] ?? '',
       purchasePrice: (data['purchasePrice'] ?? 0).toDouble(),
-      salePrice: (data['salePrice'] ?? 0).toDouble(),
       quantity: data['quantity'] ?? 0,
       imageUrl: data['imageUrl'],
       categoryId: data['categoryId'],
@@ -48,7 +45,6 @@ class Product {
     return {
       'title': title,
       'purchasePrice': purchasePrice,
-      'salePrice': salePrice,
       'quantity': quantity,
       'imageUrl': imageUrl,
       'categoryId': categoryId,
@@ -63,7 +59,6 @@ class Product {
     String? id,
     String? title,
     double? purchasePrice,
-    double? salePrice,
     int? quantity,
     String? imageUrl,
     String? categoryId,
@@ -76,7 +71,6 @@ class Product {
       id: id ?? this.id,
       title: title ?? this.title,
       purchasePrice: purchasePrice ?? this.purchasePrice,
-      salePrice: salePrice ?? this.salePrice,
       quantity: quantity ?? this.quantity,
       imageUrl: imageUrl ?? this.imageUrl,
       categoryId: categoryId ?? this.categoryId,
@@ -87,6 +81,5 @@ class Product {
     );
   }
 
-  double get profit => salePrice - purchasePrice;
   double get totalValue => purchasePrice * quantity;
 }

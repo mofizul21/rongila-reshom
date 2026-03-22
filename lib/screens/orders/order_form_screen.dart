@@ -517,6 +517,7 @@ class ProductSelectionScreen extends StatefulWidget {
 class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
   final Map<String, int> _quantities = {};
   final Map<String, double> _prices = {};
+  final Map<String, TextEditingController> _priceControllers = {};
   final TextEditingController _searchController = TextEditingController();
   List<Product> _filteredProducts = [];
 
@@ -526,12 +527,18 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
     for (var item in widget.selectedItems) {
       _quantities[item.productId] = item.quantity;
       _prices[item.productId] = item.salePrice;
+      _priceControllers[item.productId] = TextEditingController(
+        text: item.salePrice.toString(),
+      );
     }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    for (var controller in _priceControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -560,7 +567,6 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
           id: '',
           title: '',
           purchasePrice: 0,
-          salePrice: 0,
           quantity: 0,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
@@ -569,7 +575,7 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
 
       if (product.id.isNotEmpty) {
         final quantity = _quantities[productId] ?? 1;
-        final price = _prices[productId] ?? product.salePrice;
+        final price = _prices[productId] ?? product.purchasePrice;
         items.add(OrderItem(
           productId: product.id,
           productName: product.title,
@@ -644,7 +650,7 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                     final product = productsToShow[index];
                     final isSelected = _quantities.containsKey(product.id);
                     final quantity = _quantities[product.id] ?? 1;
-                    final price = _prices[product.id] ?? product.salePrice;
+                    final price = _prices[product.id] ?? product.purchasePrice;
 
                     return Card(
                       margin: const EdgeInsets.all(8),
@@ -655,16 +661,20 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                             setState(() {
                               if (value == true) {
                                 _quantities[product.id] = 1;
-                                _prices[product.id] = product.salePrice;
+                                _prices[product.id] = product.purchasePrice;
+                                _priceControllers[product.id] = TextEditingController(
+                                  text: product.purchasePrice.toString(),
+                                );
                               } else {
                                 _quantities.remove(product.id);
                                 _prices.remove(product.id);
+                                _priceControllers.remove(product.id)?.dispose();
                               }
                             });
                           },
                         ),
                         title: Text(product.title),
-                        subtitle: Text('৳${product.salePrice} - Stock: ${product.quantity}'),
+                        subtitle: Text('Cost: ৳${product.purchasePrice} - Stock: ${product.quantity}'),
                         trailing: isSelected
                             ? Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -689,7 +699,7 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                                     },
                                   ),
                                   SizedBox(
-                                    width: 60,
+                                    width: 70,
                                     child: TextField(
                                       decoration: const InputDecoration(
                                         hintText: 'Price',
@@ -697,18 +707,20 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                                           horizontal: 8,
                                           vertical: 8,
                                         ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                                        ),
                                       ),
                                       keyboardType: TextInputType.number,
                                       onChanged: (value) {
                                         final newPrice = double.tryParse(value);
                                         if (newPrice != null) {
-                                          setState(() {
-                                            _prices[product.id] = newPrice;
-                                          });
+                                          _prices[product.id] = newPrice;
                                         }
                                       },
-                                      controller: TextEditingController(
-                                        text: price.toString(),
+                                      controller: _priceControllers.putIfAbsent(
+                                        product.id,
+                                        () => TextEditingController(text: price.toString()),
                                       ),
                                     ),
                                   ),

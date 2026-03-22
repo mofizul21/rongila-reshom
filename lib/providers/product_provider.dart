@@ -27,9 +27,8 @@ class ProductProvider with ChangeNotifier {
 
   Future<void> addProduct({
     required String title,
-    double purchasePrice = 0,
-    double salePrice = 0,
-    int quantity = 0,
+    required double purchasePrice,
+    required int quantity,
     String? imageUrl,
     String? categoryId,
     String? categoryName,
@@ -43,7 +42,6 @@ class ProductProvider with ChangeNotifier {
         id: const Uuid().v4(),
         title: title,
         purchasePrice: purchasePrice,
-        salePrice: salePrice,
         quantity: quantity,
         imageUrl: imageUrl,
         categoryId: categoryId,
@@ -67,9 +65,8 @@ class ProductProvider with ChangeNotifier {
   Future<void> updateProduct({
     required String id,
     required String title,
-    double purchasePrice = 0,
-    double salePrice = 0,
-    int quantity = 0,
+    required double purchasePrice,
+    required int quantity,
     String? imageUrl,
     String? categoryId,
     String? categoryName,
@@ -85,7 +82,6 @@ class ProductProvider with ChangeNotifier {
       final updatedProduct = product.copyWith(
         title: title,
         purchasePrice: purchasePrice,
-        salePrice: salePrice,
         quantity: quantity,
         imageUrl: imageUrl,
         categoryId: categoryId,
@@ -123,7 +119,6 @@ class ProductProvider with ChangeNotifier {
         id: const Uuid().v4(),
         title: '${product.title} (Copy)',
         purchasePrice: product.purchasePrice,
-        salePrice: product.salePrice,
         quantity: product.quantity,
         imageUrl: product.imageUrl,
         categoryId: product.categoryId,
