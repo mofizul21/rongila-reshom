@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "636762004341",
+    "project_id": "rongila-reshom",
+    "storage_bucket": "rongila-reshom.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:636762004341:android:80772c0458c047295e913c",
+        "android_client_info": {
+          "package_name": "com.example.rongilareshom"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAanhQwaNSPPse1yO4hLB8PuKfjF6jqwZ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
