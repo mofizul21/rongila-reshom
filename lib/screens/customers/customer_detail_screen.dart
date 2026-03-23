@@ -52,17 +52,27 @@ class CustomerDetailScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Total Due Amount',
-                    style: TextStyle(fontSize: 16),
+                  Expanded(
+                    child: Text(
+                      'Total Due Amount',
+                      style: const TextStyle(fontSize: 15),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  Text(
-                    '৳${customer.totalDue.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: customer.totalDue > 0 ? Colors.red : Colors.green,
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      '৳${customer.totalDue.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: customer.totalDue > 0 ? Colors.red : Colors.green,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -114,33 +124,74 @@ class CustomerDetailScreen extends StatelessWidget {
                 }
 
                 return Card(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: customerOrders.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final order = customerOrders[index];
-                      return ListTile(
-                        title: Text('Order #${index + 1}'),
-                        subtitle: Text(
-                          DateFormat('dd MMM, yyyy').format(order.orderDate),
-                        ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      children: customerOrders.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final order = entry.value;
+                        return Column(
                           children: [
-                            Text(
-                              '৳${order.totalAmount.toStringAsFixed(2)}',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Order #${index + 1}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          DateFormat('dd MMM, yyyy').format(order.orderDate),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '৳${order.totalAmount.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Transform.scale(
+                                        scale: 0.75,
+                                        child: StatusChip(
+                                          status: order.status.toString().split('.').last,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                            StatusChip(
-                              status: order.status.toString().split('.').last,
-                            ),
+                            if (index < customerOrders.length - 1)
+                              const Divider(height: 1),
                           ],
-                        ),
-                      );
-                    },
+                        );
+                      }).toList(),
+                    ),
                   ),
                 );
               },

@@ -43,3 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Firebase - Contains sensitive API keys
+lib/firebase_options.dart
+
+# Environment files - Contains secrets
+.env
+.env.local
+.env.*.local
