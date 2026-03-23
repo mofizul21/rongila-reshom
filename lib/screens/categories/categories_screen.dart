@@ -56,43 +56,69 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: categoryProvider.categories.length,
-            itemBuilder: (context, index) {
-              final category = categoryProvider.categories[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                    child: Icon(
-                      Icons.category,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+          return Consumer<ProductProvider>(
+            builder: (context, productProvider, child) {
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: categoryProvider.categories.length,
+                itemBuilder: (context, index) {
+                  final category = categoryProvider.categories[index];
+                  
+                  // Calculate total quantity for this category
+                  final totalQty = productProvider.products
+                      .where((p) => p.categoryId == category.id)
+                      .fold(0, (sum, p) => sum + p.quantity);
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        child: Icon(
+                          Icons.category,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              category.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Chip(
+                            label: Text(
+                              '$totalQty in stock',
+                              style: const TextStyle(fontSize: 10, color: Colors.white),
+                            ),
+                            backgroundColor: totalQty > 0 ? Colors.green : Colors.grey,
+                            padding: EdgeInsets.zero,
+                            labelPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: -4),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ],
+                      ),
+                      subtitle: category.description != null &&
+                              category.description!.isNotEmpty
+                          ? Text(category.description!)
+                          : null,
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () => _showCategoryForm(category: category),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _confirmDelete(category),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  title: Text(
-                    category.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: category.description != null &&
-                          category.description!.isNotEmpty
-                      ? Text(category.description!)
-                      : null,
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => _showCategoryForm(category: category),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _confirmDelete(category),
-                      ),
-                    ],
-                  ),
-                ),
+                  );
+                },
               );
             },
           );

@@ -16,7 +16,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _purchasePriceController;
-  late TextEditingController _salePriceController;
   late TextEditingController _quantityController;
   late TextEditingController _imageUrlController;
   late TextEditingController _descriptionController;
@@ -144,7 +143,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       ? categories.firstWhere((c) => c.id == _selectedCategoryId, orElse: () => categories.first)
                       : null,
                   decoration: const InputDecoration(
-                    labelText: 'Category',
+                    labelText: 'Category *',
                     prefixIcon: Icon(Icons.category),
                   ),
                   hint: const Text('Select category'),
@@ -159,6 +158,12 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       _selectedCategoryId = value?.id;
                     });
                   },
+                  validator: (value) {
+                    if (value == null && _selectedCategoryId == null) {
+                      return 'Please select category';
+                    }
+                    return null;
+                  },
                 );
               },
             ),
@@ -169,10 +174,19 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   child: TextFormField(
                     controller: _purchasePriceController,
                     decoration: const InputDecoration(
-                      labelText: 'Purchase Price',
+                      labelText: 'Purchase Price *',
                       prefixIcon: Icon(Icons.attach_money),
                     ),
                     keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Required';
+                      }
+                      if (double.tryParse(value) == null) {
+                        return 'Invalid price';
+                      }
+                      return null;
+                    },
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -180,10 +194,19 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   child: TextFormField(
                     controller: _quantityController,
                     decoration: const InputDecoration(
-                      labelText: 'Quantity',
+                      labelText: 'Quantity *',
                       prefixIcon: Icon(Icons.inventory),
                     ),
                     keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Required';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Invalid qty';
+                      }
+                      return null;
+                    },
                   ),
                 ),
               ],

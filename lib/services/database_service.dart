@@ -54,6 +54,17 @@ class DatabaseService {
         .update(product.toFirestore());
   }
 
+  Future<void> updateProductQuantity(String productId, int quantityChange) async {
+    final docRef = _firestore.collection('products').doc(productId);
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      if (snapshot.exists) {
+        final currentQuantity = snapshot.data()?['quantity'] ?? 0;
+        transaction.update(docRef, {'quantity': currentQuantity + quantityChange});
+      }
+    });
+  }
+
   Future<void> deleteProduct(String productId) async {
     await _firestore.collection('products').doc(productId).delete();
   }

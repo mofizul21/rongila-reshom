@@ -26,7 +26,6 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   bool _isLoading = false;
   List<Customer> _suggestedCustomers = [];
   bool _showSuggestions = false;
-  Customer? _selectedCustomer;
 
   @override
   void initState() {
@@ -70,7 +69,6 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
 
   void _selectCustomer(Customer customer) {
     setState(() {
-      _selectedCustomer = customer;
       _customerNameController.text = customer.name;
       _customerPhoneController.text = customer.phone;
       _customerAddressController.text = customer.address;
@@ -143,7 +141,6 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     final orderProvider = context.read<OrderProvider>();
     final customerProvider = context.read<CustomerProvider>();
     final deposit = double.tryParse(_depositAmountController.text) ?? 0;
-    final dueAmount = _totalAmount - deposit;
 
     // Create or update customer
     final customerPhone = _customerPhoneController.text.trim();
@@ -165,8 +162,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
         address: _customerAddressController.text.trim(),
       );
     } else {
-      // Update existing customer's due amount
-      final newTotalDue = existingCustomer.totalDue + dueAmount;
+      // Update existing customer info
       await customerProvider.updateCustomer(
         id: existingCustomer.id,
         name: _customerNameController.text.trim(),
@@ -639,10 +635,14 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                   );
                 }
 
-                // Use filtered products
+                // Use filtered products and exclude products with 0 or less quantity
+                final availableProducts = productProvider.products
+                    .where((p) => p.quantity > 0)
+                    .toList();
+
                 final productsToShow = _filteredProducts.isEmpty
-                    ? productProvider.products
-                    : _filteredProducts;
+                    ? availableProducts
+                    : _filteredProducts.where((p) => p.quantity > 0).toList();
 
                 return ListView.builder(
                   itemCount: productsToShow.length,

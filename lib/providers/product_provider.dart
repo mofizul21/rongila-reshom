@@ -149,6 +149,23 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateProductQuantity(String productId, int quantityChange) async {
+    try {
+      final product = getProductById(productId);
+      if (product == null) return;
+
+      final updatedProduct = product.copyWith(
+        quantity: product.quantity + quantityChange,
+        updatedAt: DateTime.now(),
+      );
+
+      await _databaseService.updateProduct(updatedProduct);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
   Product? getProductById(String id) {
     try {
       return _products.firstWhere((product) => product.id == id);

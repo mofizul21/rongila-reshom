@@ -62,6 +62,11 @@ class OrderProvider with ChangeNotifier {
 
       await _databaseService.addOrder(order);
 
+      // Update product quantities
+      for (var item in items) {
+        await _databaseService.updateProductQuantity(item.productId, -item.quantity);
+      }
+
       // Update customer with order ID
       await _updateCustomerWithOrder(
         customerPhone,
@@ -142,6 +147,11 @@ class OrderProvider with ChangeNotifier {
       if (order != null) {
         // Remove order ID from customer and update due
         await _removeOrderFromCustomer(order.customerPhone, orderId, order.dueAmount);
+        
+        // Restore product quantities
+        for (var item in order.items) {
+          await _databaseService.updateProductQuantity(item.productId, item.quantity);
+        }
       }
       await _databaseService.deleteOrder(orderId);
     } catch (e) {

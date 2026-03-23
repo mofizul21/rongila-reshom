@@ -46,27 +46,59 @@ class ProductCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    // Category
+                    // Category & Quantity
                     if (product.categoryName != null &&
                         product.categoryName!.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          product.categoryName!,
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: AppFontSizes.xs,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              product.categoryName!,
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: AppFontSizes.xs,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: product.quantity > 0
+                                  ? Colors.blue[50]
+                                  : Colors.red[50],
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: product.quantity > 0
+                                    ? Colors.blue[200]!
+                                    : Colors.red[200]!,
+                              ),
+                            ),
+                            child: Text(
+                              'Qty: ${product.quantity}',
+                              style: TextStyle(
+                                color: product.quantity > 0
+                                    ? Colors.blue[700]
+                                    : Colors.red[700],
+                                fontSize: AppFontSizes.xs,
+                                fontWeight: AppFontWeights.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     const SizedBox(height: 8),
                     // Cost
