@@ -357,7 +357,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                             ),
                           ),
                           Text(
-                            '৳${item.total.toStringAsFixed(2)}',
+                            '৳${NumberFormat('#,##,##0.00').format(item.total)}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
@@ -489,7 +489,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           ),
         ),
         Text(
-          '৳${amount.toStringAsFixed(2)}',
+          '৳${NumberFormat('#,##,##0.00').format(amount)}',
           style: TextStyle(
             fontWeight: isBold ? FontWeight.bold : null,
             fontSize: isBold ? 18 : 16,
@@ -674,7 +674,7 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                           },
                         ),
                         title: Text(product.title),
-                        subtitle: Text('Cost: ৳${product.purchasePrice} - Stock: ${product.quantity}'),
+                        subtitle: Text('Cost: ৳${NumberFormat('#,##,##0.00').format(product.purchasePrice)} - Stock: ${NumberFormat('#,##,##0').format(product.quantity)}'),
                         trailing: isSelected
                             ? Row(
                                 mainAxisSize: MainAxisSize.min,

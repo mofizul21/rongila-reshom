@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../widgets/common_widgets.dart';
@@ -64,10 +65,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 itemBuilder: (context, index) {
                   final category = categoryProvider.categories[index];
                   
-                  // Calculate total quantity for this category
-                  final totalQty = productProvider.products
-                      .where((p) => p.categoryId == category.id)
-                      .fold(0, (sum, p) => sum + p.quantity);
+                  // Calculate total quantity and total purchase amount for this category
+                  final categoryProducts = productProvider.products
+                      .where((p) => p.categoryId == category.id && p.quantity > 0)
+                      .toList();
+                  
+                  final totalQty = categoryProducts.fold(0, (sum, p) => sum + p.quantity);
+                  final totalPurchaseAmount = categoryProducts.fold(0.0, (sum, p) => sum + p.totalValue);
 
                   return Card(
                     margin: const EdgeInsets.only(bottom: 8),
@@ -99,10 +103,19 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           ),
                         ],
                       ),
+                      subtitle: Text(
+                        'Total Purchase: ৳${NumberFormat('#,##,##0.00').format(totalPurchaseAmount)}',
+                        style: TextStyle(
+                          color: Colors.blue[800],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      /*
                       subtitle: category.description != null &&
                               category.description!.isNotEmpty
                           ? Text(category.description!)
                           : null,
+                      */
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

@@ -440,7 +440,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             const SizedBox(height: 8),
             // Amount in separate row
             Text(
-              '৳${amount.toStringAsFixed(0)}',
+              '৳${NumberFormat('#,##,##0').format(amount)}',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: AppFontWeights.bold,
                 color: color,
@@ -499,7 +499,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     touchTooltipData: BarTouchTooltipData(
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         return BarTooltipItem(
-                          '৳${rod.toY.toStringAsFixed(0)}',
+                          '৳${NumberFormat('#,##,##0').format(rod.toY)}',
                           const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -732,7 +732,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ),
           ),
           Text(
-            '৳${amount.toStringAsFixed(2)}',
+            '৳${NumberFormat('#,##,##0.00').format(amount)}',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: color,

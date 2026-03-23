@@ -73,7 +73,7 @@ class OrderDetailScreen extends StatelessWidget {
                   title: Text(item.productName),
                   subtitle: Text('Quantity: ${item.quantity}'),
                   trailing: Text(
-                    '৳${item.total.toStringAsFixed(2)}',
+                    '৳${NumberFormat('#,##,##0.00').format(item.total)}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 );
@@ -155,7 +155,7 @@ class OrderDetailScreen extends StatelessWidget {
           ),
         ),
         Text(
-          '৳${amount.toStringAsFixed(2)}',
+          '৳${NumberFormat('#,##,##0.00').format(amount)}',
           style: TextStyle(
             color: color,
             fontWeight: isBold ? FontWeight.bold : null,

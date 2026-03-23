@@ -233,7 +233,7 @@ class OrderCard extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          '৳${amount.toStringAsFixed(0)}',
+          '৳${NumberFormat('#,##,##0').format(amount)}',
           style: TextStyle(
             color: color,
             fontWeight: isBold ? AppFontWeights.bold : AppFontWeights.semiBold,

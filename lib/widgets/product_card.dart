@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../models/models.dart';
 import 'typography.dart';
 
@@ -103,7 +104,7 @@ class ProductCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     // Cost
                     Text(
-                      'Cost: ৳${product.purchasePrice.toStringAsFixed(2)}',
+                      'Cost: ৳${NumberFormat('#,##,##0.00').format(product.purchasePrice)}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 8),
