@@ -154,6 +154,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   (sum, order) => sum + order.totalAmount,
                 );
 
+                // Calculate 5-month sales data for chart
+                final monthlySales = _calculateMonthlySales(
+                  orderProvider.orders,
+                  5,
+                );
+
                 // Calculate purchase cost and profit
                 final allProducts = productProvider.products;
                 double totalPurchaseCost = 0;
@@ -222,7 +228,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       ),
                       const SizedBox(height: 24),
                       // Chart
-                      _buildComparisonChart(monthlySale, lastMonthSale),
+                      _buildComparisonChart(monthlySales),
                       const SizedBox(height: 24),
                       // Lifetime Stats
                       _buildLifetimeSection(
@@ -448,7 +454,27 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _buildComparisonChart(double currentMonth, double lastMonth) {
+  Widget _buildComparisonChart(List<MapEntry<String, double>> monthlySales) {
+    if (monthlySales.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Center(
+            child: Text(
+              'No sales data available',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Find max sale for chart scaling
+    final maxSale = monthlySales.fold<double>(
+      0,
+      (max, sale) => sale.value > max ? sale.value : max,
+    );
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -456,27 +482,28 @@ class _ReportsScreenState extends State<ReportsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Sales Comparison',
+              'Monthly Sales Trend',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 200,
+              height: 220,
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
-                  maxY:
-                      (currentMonth > lastMonth ? currentMonth : lastMonth) *
-                      1.2,
+                  maxY: maxSale > 0 ? maxSale * 1.15 : 1000,
                   barTouchData: BarTouchData(
                     enabled: true,
                     touchTooltipData: BarTouchTooltipData(
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         return BarTooltipItem(
                           '৳${rod.toY.toStringAsFixed(0)}',
-                          const TextStyle(color: Colors.white),
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         );
                       },
                     ),
@@ -487,12 +514,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          const titles = ['Last Month', 'This Month'];
+                          final titles = monthlySales.map((e) => e.key).toList();
                           return Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               titles[value.toInt()],
-                              style: const TextStyle(fontSize: AppFontSizes.md),
+                              style: const TextStyle(
+                                fontSize: AppFontSizes.sm,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           );
                         },
@@ -508,48 +539,73 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       sideTitles: SideTitles(showTitles: false),
                     ),
                   ),
-                  gridData: const FlGridData(show: false),
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: maxSale > 0 ? maxSale / 4 : 250,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: Colors.grey[300],
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
                   borderData: FlBorderData(show: false),
-                  barGroups: [
-                    BarChartGroupData(
-                      x: 0,
+                  barGroups: monthlySales.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final saleAmount = entry.value.value;
+                    final isCurrentMonth = index == monthlySales.length - 1;
+
+                    return BarChartGroupData(
+                      x: index,
                       barRods: [
                         BarChartRodData(
-                          toY: lastMonth,
-                          color: Colors.orange,
-                          width: 40,
+                          toY: saleAmount,
+                          color: isCurrentMonth ? Colors.blue : Colors.blue[300],
+                          width: 28,
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(6),
                             topRight: Radius.circular(6),
                           ),
                         ),
                       ],
-                    ),
-                    BarChartGroupData(
-                      x: 1,
-                      barRods: [
-                        BarChartRodData(
-                          toY: currentMonth,
-                          color: Colors.blue,
-                          width: 40,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(6),
-                            topRight: Radius.circular(6),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    );
+                  }).toList(),
                 ),
               ),
             ),
             const SizedBox(height: 16),
+            // Legend
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildLegendItem(Colors.orange, 'Last Month'),
-                const SizedBox(width: 24),
-                _buildLegendItem(Colors.blue, 'This Month'),
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Current Month',
+                  style: TextStyle(fontSize: AppFontSizes.sm),
+                ),
+                const SizedBox(width: 16),
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: Colors.blue[300],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Previous Months',
+                  style: TextStyle(fontSize: AppFontSizes.sm),
+                ),
               ],
             ),
           ],
@@ -558,21 +614,45 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _buildLegendItem(Color color, String label) {
-    return Row(
-      children: [
-        Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(label),
-      ],
-    );
+  // Helper method to calculate monthly sales for last N months
+  List<MapEntry<String, double>> _calculateMonthlySales(
+    List<OrderModel> orders,
+    int months,
+  ) {
+    final now = DateTime.now();
+    final salesData = <MapEntry<String, double>>[];
+
+    for (int i = months - 1; i >= 0; i--) {
+      DateTime monthStart;
+      DateTime monthEnd;
+
+      if (i == 0) {
+        // Current month
+        monthStart = DateTime(now.year, now.month, 1);
+        monthEnd = now;
+      } else {
+        // Previous months
+        final monthDate = DateTime(now.year, now.month - i, 1);
+        monthStart = monthDate;
+        monthEnd = DateTime(now.year, now.month - i + 1, 0, 23, 59, 59);
+      }
+
+      // Calculate total sales for this month
+      final monthSales = orders.where((order) {
+        return order.orderDate.isAfter(monthStart.subtract(const Duration(days: 1))) &&
+            order.orderDate.isBefore(monthEnd.add(const Duration(days: 1)));
+      }).fold<double>(
+        0,
+        (sum, order) => sum + order.totalAmount,
+      );
+
+      // Format month name (e.g., "Jan", "Feb")
+      final monthName = DateFormat('MMM').format(monthStart);
+
+      salesData.add(MapEntry(monthName, monthSales));
+    }
+
+    return salesData;
   }
 
   Widget _buildLifetimeSection(
