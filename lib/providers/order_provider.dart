@@ -124,6 +124,16 @@ class OrderProvider with ChangeNotifier {
 
       await _databaseService.updateOrder(updatedOrder);
 
+      // Update product quantities (Revert old ones, apply new ones)
+      // 1. Revert old stock
+      for (var item in order.items) {
+        await _databaseService.updateProductQuantity(item.productId, item.quantity);
+      }
+      // 2. Apply new stock
+      for (var item in items) {
+        await _databaseService.updateProductQuantity(item.productId, -item.quantity);
+      }
+
       // Update customer's total due and phone if changed
       await _updateCustomerDueAfterEdit(
         previousPhone,
