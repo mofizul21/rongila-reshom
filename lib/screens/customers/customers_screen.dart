@@ -117,20 +117,15 @@ class _CustomersScreenState extends State<CustomersScreen> {
           Expanded(
             child: p.Consumer2<CustomerProvider, OrderProvider>(
               builder: (context, customerProvider, orderProvider, child) {
-                // Update filtered customers when provider changes (if not searching)
-                if (_searchController.text.isEmpty) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      _updateFilteredCustomers(customerProvider.customers);
-                    }
-                  });
-                }
+                final customersToShow = _searchController.text.isEmpty
+                    ? customerProvider.customers
+                    : _filteredCustomers;
 
-                if (customerProvider.isLoading && _filteredCustomers.isEmpty) {
+                if (customerProvider.isLoading && customersToShow.isEmpty) {
                   return const LoadingWidget(message: 'Loading customers...');
                 }
 
-                if (_filteredCustomers.isEmpty) {
+                if (customersToShow.isEmpty) {
                   return const EmptyWidget(
                     message:
                         'No customers found.\nTap + to add a new customer.',
@@ -140,9 +135,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
                 return ListView.builder(
                   padding: const EdgeInsets.only(bottom: 80),
-                  itemCount: _filteredCustomers.length,
+                  itemCount: customersToShow.length,
                   itemBuilder: (context, index) {
-                    final customer = _filteredCustomers[index];
+                    final customer = customersToShow[index];
 
                     // Create a customer copy with updated order count
                     final customerWithOrders = customer.copyWith(

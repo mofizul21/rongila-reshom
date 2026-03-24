@@ -137,20 +137,15 @@ class _ProductsScreenState extends State<ProductsScreen> {
           Expanded(
             child: Consumer<ProductProvider>(
               builder: (context, productProvider, child) {
-                // Update filtered products when provider changes (if not searching)
-                if (_searchController.text.isEmpty) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      _updateFilteredProducts(productProvider.products);
-                    }
-                  });
-                }
+                final productsToShow = _searchController.text.isEmpty
+                    ? productProvider.products
+                    : _filteredProducts;
 
-                if (productProvider.isLoading && _filteredProducts.isEmpty) {
+                if (productProvider.isLoading && productsToShow.isEmpty) {
                   return const LoadingWidget(message: 'Loading products...');
                 }
 
-                if (_filteredProducts.isEmpty) {
+                if (productsToShow.isEmpty) {
                   return const EmptyWidget(
                     message: 'No products found.\nTap + to add a new product.',
                     icon: Icons.inventory_2_outlined,
@@ -159,9 +154,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
                 return ListView.builder(
                   padding: const EdgeInsets.only(bottom: 80),
-                  itemCount: _filteredProducts.length,
+                  itemCount: productsToShow.length,
                   itemBuilder: (context, index) {
-                    final product = _filteredProducts[index];
+                    final product = productsToShow[index];
                     return ProductCard(
                       product: product,
                       onEdit: () => _showProductForm(product: product),

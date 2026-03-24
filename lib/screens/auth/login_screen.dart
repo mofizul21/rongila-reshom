@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/providers.dart';
-import '../home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -35,12 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (success && mounted) {
-      // Wait a moment for user data to load from Firebase
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (!mounted) return;
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+      // AuthProvider will notifyListeners(), and AuthenticationWrapper will automatically switch to HomeScreen.
     } else if (success == false && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

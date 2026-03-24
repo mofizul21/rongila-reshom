@@ -108,20 +108,15 @@ class _NotesScreenState extends State<NotesScreen> {
           Expanded(
             child: Consumer<NoteProvider>(
               builder: (context, noteProvider, child) {
-                // Update filtered notes when provider changes (if not searching)
-                if (_searchController.text.isEmpty) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      _updateFilteredNotes(noteProvider.notes);
-                    }
-                  });
-                }
+                final notesToShow = _searchController.text.isEmpty
+                    ? noteProvider.notes
+                    : _filteredNotes;
 
-                if (noteProvider.isLoading && _filteredNotes.isEmpty) {
+                if (noteProvider.isLoading && notesToShow.isEmpty) {
                   return const LoadingWidget(message: 'Loading notes...');
                 }
 
-                if (_filteredNotes.isEmpty) {
+                if (notesToShow.isEmpty) {
                   return const EmptyWidget(
                     message: 'No notes found.\nTap + to add a new note.',
                     icon: Icons.note_outlined,
@@ -130,9 +125,9 @@ class _NotesScreenState extends State<NotesScreen> {
 
                 return ListView.builder(
                   padding: const EdgeInsets.only(bottom: 80),
-                  itemCount: _filteredNotes.length,
+                  itemCount: notesToShow.length,
                   itemBuilder: (context, index) {
-                    final note = _filteredNotes[index];
+                    final note = notesToShow[index];
                     return Card(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 16,

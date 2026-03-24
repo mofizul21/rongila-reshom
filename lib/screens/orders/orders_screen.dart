@@ -227,20 +227,15 @@ class _OrdersScreenState extends State<OrdersScreen> {
           Expanded(
             child: Consumer<OrderProvider>(
               builder: (context, orderProvider, child) {
-                // Update filtered orders when provider changes (if not searching/filtering)
-                if (_searchController.text.isEmpty && _selectedStatus == null) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      _updateFilteredOrders(orderProvider.orders);
-                    }
-                  });
-                }
+                final ordersToShow = (_searchController.text.isEmpty && _selectedStatus == null)
+                    ? orderProvider.orders
+                    : _filteredOrders;
 
-                if (orderProvider.isLoading && _filteredOrders.isEmpty) {
+                if (orderProvider.isLoading && ordersToShow.isEmpty) {
                   return const LoadingWidget(message: 'Loading orders...');
                 }
 
-                if (_filteredOrders.isEmpty) {
+                if (ordersToShow.isEmpty) {
                   return const EmptyWidget(
                     message: 'No orders found.\nTap + to create a new order.',
                     icon: Icons.shopping_cart_outlined,
@@ -249,9 +244,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
                 return ListView.builder(
                   padding: const EdgeInsets.only(bottom: 80),
-                  itemCount: _filteredOrders.length,
+                  itemCount: ordersToShow.length,
                   itemBuilder: (context, index) {
-                    final order = _filteredOrders[index];
+                    final order = ordersToShow[index];
                     return OrderCard(
                       order: order,
                       onTap: () => _showOrderDetail(order),
