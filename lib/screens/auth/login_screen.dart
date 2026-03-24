@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/providers.dart';
 import '../home_screen.dart';
-import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -38,10 +37,11 @@ class _LoginScreenState extends State<LoginScreen> {
     if (success && mounted) {
       // Wait a moment for user data to load from Firebase
       await Future.delayed(const Duration(milliseconds: 500));
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
-    } else if (mounted) {
+      if (!mounted) return;
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+    } else if (success == false && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authProvider.error ?? 'Login failed'),
@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6B4C9A).withOpacity(0.1),
+                          color: const Color(0xFF6B4C9A).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(60),
                         ),
                         child: settings.storeLogoPath.isNotEmpty
@@ -81,26 +81,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                         width: 120,
                                         height: 120,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Icon(
-                                            Icons.storefront,
-                                            size: 60,
-                                            color: Color(0xFF6B4C9A),
-                                          );
-                                        },
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return const Icon(
+                                                Icons.storefront,
+                                                size: 60,
+                                                color: Color(0xFF6B4C9A),
+                                              );
+                                            },
                                       )
                                     : Image.file(
                                         File(settings.storeLogoPath),
                                         width: 120,
                                         height: 120,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Icon(
-                                            Icons.storefront,
-                                            size: 60,
-                                            color: Color(0xFF6B4C9A),
-                                          );
-                                        },
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return const Icon(
+                                                Icons.storefront,
+                                                size: 60,
+                                                color: Color(0xFF6B4C9A),
+                                              );
+                                            },
                                       ),
                               )
                             : const Icon(
@@ -117,7 +119,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     builder: (context, settings, child) {
                       return Text(
                         settings.storeName,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: const Color(0xFF6B4C9A),
                             ),
@@ -128,9 +131,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Inventory Management',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 48),
                   TextFormField(
@@ -184,7 +187,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: authProvider.isLoading ? null : _handleLogin,
+                          onPressed: authProvider.isLoading
+                              ? null
+                              : _handleLogin,
                           child: authProvider.isLoading
                               ? const SizedBox(
                                   height: 20,
@@ -202,6 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
+                  /*
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).push(
@@ -209,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     child: const Text('Create new account (Admin only)'),
-                  ),
+                  ), */
                 ],
               ),
             ),

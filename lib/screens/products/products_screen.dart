@@ -16,7 +16,6 @@ class ProductsScreen extends StatefulWidget {
 class _ProductsScreenState extends State<ProductsScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<Product> _filteredProducts = [];
-  bool _isSearching = false;
 
   @override
   void initState() {
@@ -39,10 +38,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   void _searchProducts(String query) {
-    setState(() {
-      _isSearching = query.isNotEmpty;
-    });
-
     final productProvider = context.read<ProductProvider>();
     if (query.isEmpty) {
       _updateFilteredProducts(productProvider.products);
@@ -73,7 +68,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         message: 'Are you sure you want to delete "${product.title}"?',
       ),
     ).then((confirmed) {
-      if (confirmed == true) {
+      if (confirmed == true && mounted) {
         context.read<ProductProvider>().deleteProduct(product.id);
       }
     });

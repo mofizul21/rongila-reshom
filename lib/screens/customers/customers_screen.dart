@@ -18,7 +18,6 @@ class CustomersScreen extends StatefulWidget {
 class _CustomersScreenState extends State<CustomersScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<Customer> _filteredCustomers = [];
-  bool _isSearching = false;
 
   @override
   void initState() {
@@ -41,10 +40,6 @@ class _CustomersScreenState extends State<CustomersScreen> {
   }
 
   void _searchCustomers(String query) {
-    setState(() {
-      _isSearching = query.isNotEmpty;
-    });
-
     final customerProvider = context.read<CustomerProvider>();
     if (query.isEmpty) {
       setState(() {
@@ -63,9 +58,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
   void _showCustomerForm({Customer? customer}) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CustomerFormScreen(customer: customer),
-      ),
+      MaterialPageRoute(builder: (_) => CustomerFormScreen(customer: customer)),
     );
   }
 
@@ -85,7 +78,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
         message: 'Are you sure you want to delete "${customer.name}"?',
       ),
     ).then((confirmed) {
-      if (confirmed == true) {
+      if (confirmed == true && mounted) {
         context.read<CustomerProvider>().deleteCustomer(customer.id);
       }
     });
@@ -133,8 +126,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   });
                 }
 
-                if (customerProvider.isLoading &&
-                    _filteredCustomers.isEmpty) {
+                if (customerProvider.isLoading && _filteredCustomers.isEmpty) {
                   return const LoadingWidget(message: 'Loading customers...');
                 }
 
@@ -151,19 +143,17 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   itemCount: _filteredCustomers.length,
                   itemBuilder: (context, index) {
                     final customer = _filteredCustomers[index];
-                    // Get order count by matching phone
-                    final orderCount = orderProvider.orders
-                        .where((order) => order.customerPhone == customer.phone)
-                        .length;
-                    
+
                     // Create a customer copy with updated order count
                     final customerWithOrders = customer.copyWith(
                       orderIds: orderProvider.orders
-                          .where((order) => order.customerPhone == customer.phone)
+                          .where(
+                            (order) => order.customerPhone == customer.phone,
+                          )
                           .map((order) => order.id)
                           .toList(),
                     );
-                    
+
                     return CustomerCard(
                       customer: customerWithOrders,
                       onTap: () => _showCustomerDetail(customer),

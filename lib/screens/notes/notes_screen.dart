@@ -15,7 +15,6 @@ class NotesScreen extends StatefulWidget {
 class _NotesScreenState extends State<NotesScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<Note> _filteredNotes = [];
-  bool _isSearching = false;
 
   @override
   void initState() {
@@ -38,10 +37,6 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   void _searchNotes(String query) {
-    setState(() {
-      _isSearching = query.isNotEmpty;
-    });
-
     final noteProvider = context.read<NoteProvider>();
     if (query.isEmpty) {
       setState(() {
@@ -74,7 +69,7 @@ class _NotesScreenState extends State<NotesScreen> {
         message: 'Are you sure you want to delete this note?',
       ),
     ).then((confirmed) {
-      if (confirmed == true) {
+      if (confirmed == true && mounted) {
         context.read<NoteProvider>().deleteNote(note.id);
       }
     });

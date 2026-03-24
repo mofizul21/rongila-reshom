@@ -28,7 +28,7 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
         message: 'Are you sure you want to delete "${supplier.name}"?',
       ),
     ).then((confirmed) {
-      if (confirmed == true) {
+      if (confirmed == true && mounted) {
         context.read<SupplierProvider>().deleteSupplier(supplier.id);
       }
     });
@@ -81,7 +81,7 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 4),
-                      Text('${supplier.phone}'),
+                      Text(supplier.phone),
                       const SizedBox(height: 4),
                       Text(
                         'Date: ${DateFormat('dd MMM, yyyy').format(supplier.date)}',

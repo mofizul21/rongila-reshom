@@ -63,7 +63,7 @@ class AuthService {
 
   // Update email
   Future<void> updateEmail(String newEmail) async {
-    await currentUser?.updateEmail(newEmail);
+    await currentUser?.verifyBeforeUpdateEmail(newEmail);
     await _firestore.collection('users').doc(currentUser!.uid).update({
       'email': newEmail,
     });
@@ -148,7 +148,7 @@ class AuthService {
       if (authUser != null) {
         // Create admin user document in Firestore
         final adminUser = AppUser(
-          id: authUser!.uid,
+          id: authUser.uid,
           email: adminEmail,
           fullName: 'Admin User',
           role: UserRole.admin,

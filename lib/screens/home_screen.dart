@@ -298,38 +298,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildLogo(SettingsProvider settings, Color logoColor) {
-    if (settings.storeLogoPath.isEmpty) {
-      return Icon(Icons.storefront, size: 40, color: logoColor);
-    }
-    
-    if (settings.storeLogoPath.startsWith('http')) {
-      return ClipOval(
-        child: Image.network(
-          settings.storeLogoPath,
-          width: 64,
-          height: 64,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(Icons.storefront, size: 40, color: logoColor);
-          },
-        ),
-      );
-    }
-    
-    return ClipOval(
-      child: Image.file(
-        File(settings.storeLogoPath),
-        width: 64,
-        height: 64,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Icon(Icons.storefront, size: 40, color: logoColor);
-        },
-      ),
-    );
-  }
-
   void _onDrawerItemTapped(int index) {
     setState(() {
       _selectedIndex = index;

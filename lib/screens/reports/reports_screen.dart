@@ -25,17 +25,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return DateTime(_selectedYear, _selectedMonth.month + 1, 0, 23, 59, 59);
   }
 
-  DateTime get _lastMonthStart {
-    if (_selectedMonth.month == 1) {
-      return DateTime(_selectedYear - 1, 12, 1);
-    }
-    return DateTime(_selectedYear, _selectedMonth.month - 1, 1);
-  }
-
-  DateTime get _lastMonthEnd {
-    return DateTime(_selectedYear, _selectedMonth.month, 0, 23, 59, 59);
-  }
-
   void _previousMonth() {
     setState(() {
       if (_selectedMonth.month == 1) {
@@ -128,16 +117,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       );
                 }).toList();
 
-                // Filter orders for last month
-                final lastMonthOrders = orderProvider.orders.where((order) {
-                  return order.orderDate.isAfter(
-                        _lastMonthStart.subtract(const Duration(days: 1)),
-                      ) &&
-                      order.orderDate.isBefore(
-                        _lastMonthEnd.add(const Duration(days: 1)),
-                      );
-                }).toList();
-
                 // Calculate monthly stats
                 final monthlySale = monthlyOrders.fold<double>(
                   0,
@@ -148,21 +127,43 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   (sum, order) => sum + order.dueAmount,
                 );
 
-                // Calculate last month sale for chart
-                final lastMonthSale = lastMonthOrders.fold<double>(
-                  0,
-                  (sum, order) => sum + order.totalAmount,
-                );
-
                 // Calculate 5-month sales data for chart
                 final monthlySales = _calculateMonthlySales(
                   orderProvider.orders,
                   5,
                 );
 
-                // Calculate purchase cost and profit
                 final allProducts = productProvider.products;
-                double totalPurchaseCost = 0;
+
+                // Pre-calculate total sold for each product across ALL time to reconstruct initial quantity
+                final Map<String, int> totalSoldMap = {};
+                for (var order in orderProvider.orders) {
+                  for (var item in order.items) {
+                    totalSoldMap[item.productId] =
+                        (totalSoldMap[item.productId] ?? 0) + item.quantity;
+                  }
+                }
+
+                // Helper to get reconstructed initial quantity of a product
+                int getInitialQuantity(Product p) => p.quantity + (totalSoldMap[p.id] ?? 0);
+
+                // Calculate Monthly Purchase (Total cost of products ADDED this month)
+                final monthlyAddedProducts = allProducts.where((p) {
+                  return p.createdAt.isAfter(
+                        _monthStart.subtract(const Duration(days: 1)),
+                      ) &&
+                      p.createdAt.isBefore(
+                        _monthEnd.add(const Duration(days: 1)),
+                      );
+                }).toList();
+
+                final totalPurchaseCost = monthlyAddedProducts.fold<double>(
+                  0,
+                  (sum, p) => sum + (p.purchasePrice * getInitialQuantity(p)),
+                );
+
+                // Calculate Purchase Cost of items sold THIS month for profit calculation
+                double monthlyPurchaseCostOfSoldItems = 0;
                 for (var order in monthlyOrders) {
                   for (var item in order.items) {
                     final product = allProducts.firstWhere(
@@ -176,11 +177,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         updatedAt: DateTime.now(),
                       ),
                     );
-                    totalPurchaseCost +=
-                        (product.purchasePrice * item.quantity);
+                    // Use purchase price from product
+                    double cost = (product.purchasePrice > 0) ? product.purchasePrice : 0;
+                    monthlyPurchaseCostOfSoldItems += (cost * item.quantity);
                   }
                 }
-                final monthlyProfit = monthlySale - totalPurchaseCost;
+                // Profit = Sales minus purchase cost of items actually sold
+                final monthlyProfit = monthlySale - monthlyPurchaseCostOfSoldItems;
 
                 // Calculate lifetime stats
                 final lifetimeSale = orderProvider.orders.fold<double>(
@@ -192,8 +195,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   (sum, order) => sum + order.dueAmount,
                 );
 
-                // Calculate lifetime purchase and profit
-                double lifetimePurchaseCost = 0;
+                // Calculate Lifetime Total Purchase (Total cost of ALL products ever added)
+                final double lifetimePurchaseCost = allProducts.fold<double>(
+                  0,
+                  (sum, p) => sum + (p.purchasePrice * getInitialQuantity(p)),
+                );
+
+                // Calculate Lifetime Purchase Cost of items sold for Lifetime Profit
+                double lifetimePurchaseCostOfSoldItems = 0;
                 for (var order in orderProvider.orders) {
                   for (var item in order.items) {
                     final product = allProducts.firstWhere(
@@ -207,11 +216,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         updatedAt: DateTime.now(),
                       ),
                     );
-                    lifetimePurchaseCost +=
-                        (product.purchasePrice * item.quantity);
+                    double cost = (product.purchasePrice > 0) ? product.purchasePrice : 0;
+                    lifetimePurchaseCostOfSoldItems += (cost * item.quantity);
                   }
                 }
-                final lifetimeProfit = lifetimeSale - lifetimePurchaseCost;
+                final lifetimeProfit = lifetimeSale - lifetimePurchaseCostOfSoldItems;
 
                 return SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
@@ -256,7 +265,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -412,12 +421,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Color.fromRGBO(
-                      color.red,
-                      color.green,
-                      color.blue,
-                      0.1,
-                    ),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(icon, color: color, size: 18),
@@ -514,7 +518,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          final titles = monthlySales.map((e) => e.key).toList();
+                          final titles = monthlySales
+                              .map((e) => e.key)
+                              .toList();
                           return Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
@@ -544,10 +550,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     drawVerticalLine: false,
                     horizontalInterval: maxSale > 0 ? maxSale / 4 : 250,
                     getDrawingHorizontalLine: (value) {
-                      return FlLine(
-                        color: Colors.grey[300],
-                        strokeWidth: 1,
-                      );
+                      return FlLine(color: Colors.grey[300], strokeWidth: 1);
                     },
                   ),
                   borderData: FlBorderData(show: false),
@@ -561,7 +564,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       barRods: [
                         BarChartRodData(
                           toY: saleAmount,
-                          color: isCurrentMonth ? Colors.blue : Colors.blue[300],
+                          color: isCurrentMonth
+                              ? Colors.blue
+                              : Colors.blue[300],
                           width: 28,
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(6),
@@ -638,13 +643,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
       }
 
       // Calculate total sales for this month
-      final monthSales = orders.where((order) {
-        return order.orderDate.isAfter(monthStart.subtract(const Duration(days: 1))) &&
-            order.orderDate.isBefore(monthEnd.add(const Duration(days: 1)));
-      }).fold<double>(
-        0,
-        (sum, order) => sum + order.totalAmount,
-      );
+      final monthSales = orders
+          .where((order) {
+            return order.orderDate.isAfter(
+                  monthStart.subtract(const Duration(days: 1)),
+                ) &&
+                order.orderDate.isBefore(monthEnd.add(const Duration(days: 1)));
+          })
+          .fold<double>(0, (sum, order) => sum + order.totalAmount);
 
       // Format month name (e.g., "Jan", "Feb")
       final monthName = DateFormat('MMM').format(monthStart);
@@ -663,12 +669,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     double lifetimePurchase,
   ) {
     return Card(
-      color: Color.fromRGBO(
-        Theme.of(context).colorScheme.primaryContainer.red,
-        Theme.of(context).colorScheme.primaryContainer.green,
-        Theme.of(context).colorScheme.primaryContainer.blue,
-        1.0,
-      ),
+      color: Theme.of(context).colorScheme.primaryContainer,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -732,7 +733,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ),
           ),
           Text(
-            '৳${NumberFormat('#,##,##0.00').format(amount)}',
+            '৳${NumberFormat('#,##,##0').format(amount.round())}',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: color,

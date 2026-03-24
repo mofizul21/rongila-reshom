@@ -236,7 +236,7 @@ class _EditUserDialogState extends State<EditUserDialog> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<UserRole>(
-              value: _selectedRole,
+              initialValue: _selectedRole,
               decoration: const InputDecoration(
                 labelText: 'Role',
                 prefixIcon: Icon(Icons.badge),

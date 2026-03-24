@@ -30,7 +30,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         message: 'Are you sure you want to delete "${category.name}"?\n\nWarning: This may affect products in this category.',
       ),
     ).then((confirmed) {
-      if (confirmed == true) {
+      if (confirmed == true && mounted) {
         context.read<CategoryProvider>().deleteCategory(category.id);
       }
     });

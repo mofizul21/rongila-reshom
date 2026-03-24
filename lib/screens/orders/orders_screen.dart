@@ -18,7 +18,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<OrderModel> _filteredOrders = [];
   OrderStatus? _selectedStatus;
-  bool _isSearching = false;
 
   @override
   void initState() {
@@ -41,10 +40,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   void _searchOrders(String query) {
-    setState(() {
-      _isSearching = query.isNotEmpty;
-    });
-
     final orderProvider = context.read<OrderProvider>();
     if (query.isEmpty) {
       setState(() {
@@ -85,7 +80,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         message: 'Are you sure you want to delete this order?',
       ),
     ).then((confirmed) {
-      if (confirmed == true) {
+      if (confirmed == true && mounted) {
         context.read<OrderProvider>().deleteOrder(order.id);
       }
     });

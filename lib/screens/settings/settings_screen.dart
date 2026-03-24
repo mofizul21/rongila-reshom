@@ -4,7 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../providers/providers.dart';
 import '../../widgets/typography.dart';
-import '../../widgets/common_widgets.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -51,7 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       imageQuality: 85,
     );
 
-    if (pickedFile != null) {
+    if (pickedFile != null && mounted) {
       setState(() {
         _selectedImageFile = File(pickedFile.path);
       });
