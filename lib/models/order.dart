@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'payment_transaction.dart';
 
 enum OrderStatus { pending, completed, delivered }
 
@@ -52,6 +53,7 @@ class OrderModel {
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final List<PaymentTransaction> paymentTransactions;
 
   OrderModel({
     required this.id,
@@ -67,12 +69,17 @@ class OrderModel {
     this.notes,
     required this.createdAt,
     required this.updatedAt,
+    this.paymentTransactions = const [],
   });
 
   factory OrderModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     final itemsData = data['items'] as List<dynamic>? ?? [];
     final items = itemsData.map((e) => OrderItem.fromFirestore(e as Map<String, dynamic>)).toList();
+    final transactionsData = data['paymentTransactions'] as List<dynamic>? ?? [];
+    final paymentTransactions = transactionsData
+        .map((e) => PaymentTransaction.fromFirestore(e as Map<String, dynamic>))
+        .toList();
 
     return OrderModel(
       id: doc.id,
@@ -91,6 +98,7 @@ class OrderModel {
       notes: data['notes'],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      paymentTransactions: paymentTransactions,
     );
   }
 
@@ -108,6 +116,8 @@ class OrderModel {
       'notes': notes,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      'paymentTransactions':
+          paymentTransactions.map((e) => e.toFirestore()).toList(),
     };
   }
 
@@ -125,6 +135,7 @@ class OrderModel {
     String? notes,
     DateTime? createdAt,
     DateTime? updatedAt,
+    List<PaymentTransaction>? paymentTransactions,
   }) {
     return OrderModel(
       id: id ?? this.id,
@@ -140,6 +151,7 @@ class OrderModel {
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      paymentTransactions: paymentTransactions ?? this.paymentTransactions,
     );
   }
 }

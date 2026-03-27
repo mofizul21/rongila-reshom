@@ -6,3 +6,4 @@ export 'customer.dart';
 export 'note.dart';
 export 'supplier.dart';
 export 'expense.dart';
+export 'payment_transaction.dart';

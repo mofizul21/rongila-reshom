@@ -254,6 +254,213 @@ class OrderProvider with ChangeNotifier {
     }
   }
 
+  Future<void> addPayment({
+    required String orderId,
+    required double amount,
+    required DateTime paymentDate,
+    String? note,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final order = getOrderById(orderId);
+      if (order == null) {
+        _isLoading = false;
+        _error = 'Order not found';
+        notifyListeners();
+        return;
+      }
+
+      // Create new payment transaction
+      final transaction = PaymentTransaction(
+        id: const Uuid().v4(),
+        amount: amount,
+        paymentDate: paymentDate,
+        note: note,
+        createdAt: DateTime.now(),
+      );
+
+      // Calculate new due amount
+      final newTotalDeposit = order.depositAmount + amount;
+      final newDueAmount = order.totalAmount - newTotalDeposit;
+
+      // Add transaction to order
+      final updatedTransactions = [
+        ...order.paymentTransactions,
+        transaction,
+      ];
+
+      final updatedOrder = order.copyWith(
+        depositAmount: newTotalDeposit,
+        dueAmount: newDueAmount,
+        paymentTransactions: updatedTransactions,
+        updatedAt: DateTime.now(),
+      );
+
+      await _databaseService.updateOrder(updatedOrder);
+
+      // Update customer's total due
+      await _updateCustomerDueAfterPayment(
+        order.customerPhone,
+        order.dueAmount,
+        newDueAmount,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> deletePayment({
+    required String orderId,
+    required String transactionId,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final order = getOrderById(orderId);
+      if (order == null) {
+        _isLoading = false;
+        _error = 'Order not found';
+        notifyListeners();
+        return;
+      }
+
+      final transaction = order.paymentTransactions.firstWhere(
+        (t) => t.id == transactionId,
+        orElse: () => throw Exception('Transaction not found'),
+      );
+
+      // Calculate new due amount
+      final newTotalDeposit = order.depositAmount - transaction.amount;
+      final newDueAmount = order.totalAmount - newTotalDeposit;
+
+      final updatedTransactions = order.paymentTransactions
+          .where((t) => t.id != transactionId)
+          .toList();
+
+      final updatedOrder = order.copyWith(
+        depositAmount: newTotalDeposit,
+        dueAmount: newDueAmount,
+        paymentTransactions: updatedTransactions,
+        updatedAt: DateTime.now(),
+      );
+
+      await _databaseService.updateOrder(updatedOrder);
+
+      // Update customer's total due
+      await _updateCustomerDueAfterPayment(
+        order.customerPhone,
+        order.dueAmount,
+        newDueAmount,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> updatePayment({
+    required String orderId,
+    required String transactionId,
+    required double amount,
+    required DateTime paymentDate,
+    String? note,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final order = getOrderById(orderId);
+      if (order == null) {
+        _isLoading = false;
+        _error = 'Order not found';
+        notifyListeners();
+        return;
+      }
+
+      final oldTransaction = order.paymentTransactions.firstWhere(
+        (t) => t.id == transactionId,
+        orElse: () => throw Exception('Transaction not found'),
+      );
+
+      // Calculate new due amount
+      final amountDifference = amount - oldTransaction.amount;
+      final newTotalDeposit = order.depositAmount + amountDifference;
+      final newDueAmount = order.totalAmount - newTotalDeposit;
+
+      // Update the transaction
+      final updatedTransactions = order.paymentTransactions.map((t) {
+        if (t.id == transactionId) {
+          return t.copyWith(
+            amount: amount,
+            paymentDate: paymentDate,
+            note: note,
+          );
+        }
+        return t;
+      }).toList();
+
+      final updatedOrder = order.copyWith(
+        depositAmount: newTotalDeposit,
+        dueAmount: newDueAmount,
+        paymentTransactions: updatedTransactions,
+        updatedAt: DateTime.now(),
+      );
+
+      await _databaseService.updateOrder(updatedOrder);
+
+      // Update customer's total due
+      await _updateCustomerDueAfterPayment(
+        order.customerPhone,
+        order.dueAmount,
+        newDueAmount,
+      );
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> _updateCustomerDueAfterPayment(
+    String phone,
+    double previousDue,
+    double newDue,
+  ) async {
+    final customersSnapshot = await _databaseService.customersStream.first;
+
+    try {
+      Customer customer = customersSnapshot.firstWhere(
+        (c) => c.phone == phone,
+      );
+
+      // Update due amount
+      final updatedDue = customer.totalDue - previousDue + newDue;
+      final updatedCustomer = customer.copyWith(
+        totalDue: updatedDue >= 0 ? updatedDue : 0,
+        updatedAt: DateTime.now(),
+      );
+
+      await _databaseService.updateCustomer(updatedCustomer);
+    } catch (e) {
+      // Customer not found, skip update
+    }
+  }
+
   Future<void> _updateCustomerWithOrder(
     String phone,
     String name,

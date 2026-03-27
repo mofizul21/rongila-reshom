@@ -169,6 +169,49 @@ class DatabaseService {
         .update(order.toFirestore());
   }
 
+  Future<void> addPaymentTransaction(
+    String orderId,
+    PaymentTransaction transaction,
+  ) async {
+    final orderRef = _firestore.collection('orders').doc(orderId);
+    await _firestore.runTransaction((firestoreTransaction) async {
+      final snapshot = await firestoreTransaction.get(orderRef);
+      if (snapshot.exists) {
+        final data = snapshot.data() as Map<String, dynamic>;
+        final existingTransactions =
+            (data['paymentTransactions'] as List<dynamic>?) ?? [];
+        final updatedTransactions = [
+          ...existingTransactions,
+          transaction.toFirestore(),
+        ];
+        firestoreTransaction.update(orderRef, {
+          'paymentTransactions': updatedTransactions,
+        });
+      }
+    });
+  }
+
+  Future<void> deletePaymentTransaction(
+    String orderId,
+    String transactionId,
+  ) async {
+    final orderRef = _firestore.collection('orders').doc(orderId);
+    await _firestore.runTransaction((firestoreTransaction) async {
+      final snapshot = await firestoreTransaction.get(orderRef);
+      if (snapshot.exists) {
+        final data = snapshot.data() as Map<String, dynamic>;
+        final existingTransactions =
+            (data['paymentTransactions'] as List<dynamic>?) ?? [];
+        final updatedTransactions = existingTransactions
+            .where((t) => (t as Map<String, dynamic>)['id'] != transactionId)
+            .toList();
+        firestoreTransaction.update(orderRef, {
+          'paymentTransactions': updatedTransactions,
+        });
+      }
+    });
+  }
+
   Future<void> deleteOrder(String orderId) async {
     await _firestore.collection('orders').doc(orderId).delete();
   }

@@ -619,48 +619,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  // Helper method to calculate monthly sales for last N months
-  List<MapEntry<String, double>> _calculateMonthlySales(
-    List<OrderModel> orders,
-    int months,
-  ) {
-    final now = DateTime.now();
-    final salesData = <MapEntry<String, double>>[];
-
-    for (int i = months - 1; i >= 0; i--) {
-      DateTime monthStart;
-      DateTime monthEnd;
-
-      if (i == 0) {
-        // Current month
-        monthStart = DateTime(now.year, now.month, 1);
-        monthEnd = now;
-      } else {
-        // Previous months
-        final monthDate = DateTime(now.year, now.month - i, 1);
-        monthStart = monthDate;
-        monthEnd = DateTime(now.year, now.month - i + 1, 0, 23, 59, 59);
-      }
-
-      // Calculate total sales for this month
-      final monthSales = orders
-          .where((order) {
-            return order.orderDate.isAfter(
-                  monthStart.subtract(const Duration(days: 1)),
-                ) &&
-                order.orderDate.isBefore(monthEnd.add(const Duration(days: 1)));
-          })
-          .fold<double>(0, (sum, order) => sum + order.totalAmount);
-
-      // Format month name (e.g., "Jan", "Feb")
-      final monthName = DateFormat('MMM').format(monthStart);
-
-      salesData.add(MapEntry(monthName, monthSales));
-    }
-
-    return salesData;
-  }
-
   Widget _buildLifetimeSection(
     BuildContext context,
     double lifetimeSale,
@@ -742,5 +700,47 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ],
       ),
     );
+  }
+
+  // Helper method to calculate monthly sales for last N months
+  List<MapEntry<String, double>> _calculateMonthlySales(
+    List<OrderModel> orders,
+    int months,
+  ) {
+    final now = DateTime.now();
+    final salesData = <MapEntry<String, double>>[];
+
+    for (int i = months - 1; i >= 0; i--) {
+      DateTime monthStart;
+      DateTime monthEnd;
+
+      if (i == 0) {
+        // Current month
+        monthStart = DateTime(now.year, now.month, 1);
+        monthEnd = now;
+      } else {
+        // Previous months
+        final monthDate = DateTime(now.year, now.month - i, 1);
+        monthStart = monthDate;
+        monthEnd = DateTime(now.year, now.month - i + 1, 0, 23, 59, 59);
+      }
+
+      // Calculate total sales for this month
+      final monthSales = orders
+          .where((order) {
+            return order.orderDate.isAfter(
+                  monthStart.subtract(const Duration(days: 1)),
+                ) &&
+                order.orderDate.isBefore(monthEnd.add(const Duration(days: 1)));
+          })
+          .fold<double>(0, (sum, order) => sum + order.totalAmount);
+
+      // Format month name (e.g., "Jan", "Feb")
+      final monthName = DateFormat('MMM').format(monthStart);
+
+      salesData.add(MapEntry(monthName, monthSales));
+    }
+
+    return salesData;
   }
 }
