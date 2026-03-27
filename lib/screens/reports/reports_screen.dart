@@ -127,10 +127,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   (sum, order) => sum + order.dueAmount,
                 );
 
-                // Calculate 5-month sales data for chart
+                // Calculate 5-month sales data for chart (ending at selected month)
                 final monthlySales = _calculateMonthlySales(
                   orderProvider.orders,
                   5,
+                  _selectedYear,
+                  _selectedMonth.month,
                 );
 
                 final allProducts = productProvider.products;
@@ -702,28 +704,32 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  // Helper method to calculate monthly sales for last N months
+  // Helper method to calculate monthly sales for last N months ending at specified month
   List<MapEntry<String, double>> _calculateMonthlySales(
     List<OrderModel> orders,
     int months,
+    int year,
+    int month,
   ) {
-    final now = DateTime.now();
     final salesData = <MapEntry<String, double>>[];
 
     for (int i = months - 1; i >= 0; i--) {
       DateTime monthStart;
       DateTime monthEnd;
 
-      if (i == 0) {
-        // Current month
-        monthStart = DateTime(now.year, now.month, 1);
-        monthEnd = now;
-      } else {
-        // Previous months
-        final monthDate = DateTime(now.year, now.month - i, 1);
-        monthStart = monthDate;
-        monthEnd = DateTime(now.year, now.month - i + 1, 0, 23, 59, 59);
+      // Calculate the month date relative to selected month
+      int monthsBack = months - 1 - i;
+      int targetMonth = month - monthsBack;
+      int targetYear = year;
+      
+      // Adjust year if month goes below 1
+      while (targetMonth < 1) {
+        targetMonth += 12;
+        targetYear -= 1;
       }
+      
+      monthStart = DateTime(targetYear, targetMonth, 1);
+      monthEnd = DateTime(targetYear, targetMonth + 1, 0, 23, 59, 59);
 
       // Calculate total sales for this month
       final monthSales = orders
