@@ -118,7 +118,7 @@ class DatabaseService {
   Stream<List<OrderModel>> get ordersStream {
     return _firestore
         .collection('orders')
-        .orderBy('orderDate', descending: true)
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
@@ -131,7 +131,7 @@ class DatabaseService {
     return _firestore
         .collection('orders')
         .where('status', isEqualTo: status.toString().split('.').last)
-        .orderBy('orderDate', descending: true)
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
@@ -427,7 +427,7 @@ class DatabaseService {
   Stream<List<Map<String, dynamic>>> get paymentHistoryStream {
     return _firestore
         .collection('orders')
-        .orderBy('orderDate', descending: true)
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs.map((doc) {
