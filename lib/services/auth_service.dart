@@ -120,46 +120,43 @@ class AuthService {
   // Check if default admin exists, create if not
   Future<void> ensureDefaultAdmin() async {
     final adminEmail = 'admin@rongilareshom.com';
-    
-    // Check if user exists in Firestore
-    final query = await _firestore.collection('users')
-        .where('email', isEqualTo: adminEmail)
-        .limit(1)
-        .get();
-    
-    if (query.docs.isEmpty) {
-      // Try to find user in Firebase Auth by signing in
-      User? authUser;
-      try {
-        final credential = await _auth.signInWithEmailAndPassword(
-          email: adminEmail,
-          password: '123456',
-        );
-        authUser = credential.user;
-        await _auth.signOut();
-      } catch (e) {
-        final credential = await _auth.createUserWithEmailAndPassword(
-          email: adminEmail,
-          password: '123456',
-        );
-        authUser = credential.user;
-      }
-      
-      if (authUser != null) {
-        // Create admin user document in Firestore
-        final adminUser = AppUser(
-          id: authUser.uid,
-          email: adminEmail,
-          fullName: 'Admin User',
-          role: UserRole.admin,
-          createdAt: DateTime.now(),
-          createdBy: null,
-        );
-        
-        await _firestore.collection('users').doc(authUser.uid).set(
-          adminUser.toFirestore(),
-        );
-      }
+
+    // Try to sign in first to check if user exists in Auth
+    User? authUser;
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: adminEmail,
+        password: '123456',
+      );
+      authUser = credential.user;
+      await _auth.signOut();
+      // User exists, nothing to do
+      return;
+    } catch (e) {
+      // User doesn't exist in Auth, create below
+    }
+
+    // Create new admin user
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: adminEmail,
+      password: '123456',
+    );
+    authUser = credential.user;
+
+    if (authUser != null) {
+      // Create admin user document in Firestore
+      final adminUser = AppUser(
+        id: authUser.uid,
+        email: adminEmail,
+        fullName: 'Admin User',
+        role: UserRole.admin,
+        createdAt: DateTime.now(),
+        createdBy: null,
+      );
+
+      await _firestore.collection('users').doc(authUser.uid).set(
+        adminUser.toFirestore(),
+      );
     }
   }
 

@@ -514,6 +514,7 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
   final Map<String, int> _quantities = {};
   final Map<String, double> _prices = {};
   final Map<String, TextEditingController> _priceControllers = {};
+  final Map<String, TextEditingController> _quantityControllers = {};
   final TextEditingController _searchController = TextEditingController();
   List<Product> _filteredProducts = [];
 
@@ -526,6 +527,9 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
       _priceControllers[item.productId] = TextEditingController(
         text: item.salePrice.toString(),
       );
+      _quantityControllers[item.productId] = TextEditingController(
+        text: item.quantity.toString(),
+      );
     }
   }
 
@@ -533,6 +537,9 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
   void dispose() {
     _searchController.dispose();
     for (var controller in _priceControllers.values) {
+      controller.dispose();
+    }
+    for (var controller in _quantityControllers.values) {
       controller.dispose();
     }
     super.dispose();
@@ -665,10 +672,14 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                                 _priceControllers[product.id] = TextEditingController(
                                   text: product.purchasePrice.toString(),
                                 );
+                                _quantityControllers[product.id] = TextEditingController(
+                                  text: '1',
+                                );
                               } else {
                                 _quantities.remove(product.id);
                                 _prices.remove(product.id);
                                 _priceControllers.remove(product.id)?.dispose();
+                                _quantityControllers.remove(product.id)?.dispose();
                               }
                             });
                           },
@@ -685,16 +696,45 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                                       setState(() {
                                         if (quantity > 1) {
                                           _quantities[product.id] = quantity - 1;
+                                          _quantityControllers[product.id]?.text = (quantity - 1).toString();
                                         }
                                       });
                                     },
                                   ),
-                                  Text('$quantity'),
+                                  SizedBox(
+                                    width: 50,
+                                    child: TextField(
+                                      decoration: const InputDecoration(
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 8,
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                                        ),
+                                      ),
+                                      keyboardType: TextInputType.number,
+                                      textAlign: TextAlign.center,
+                                      onChanged: (value) {
+                                        final newQty = int.tryParse(value);
+                                        if (newQty != null && newQty > 0) {
+                                          setState(() {
+                                            _quantities[product.id] = newQty;
+                                          });
+                                        }
+                                      },
+                                      controller: _quantityControllers.putIfAbsent(
+                                        product.id,
+                                        () => TextEditingController(text: quantity.toString()),
+                                      ),
+                                    ),
+                                  ),
                                   IconButton(
                                     icon: const Icon(Icons.add_circle_outline),
                                     onPressed: () {
                                       setState(() {
                                         _quantities[product.id] = quantity + 1;
+                                        _quantityControllers[product.id]?.text = (quantity + 1).toString();
                                       });
                                     },
                                   ),
