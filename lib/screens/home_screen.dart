@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/providers.dart';
-import '../services/auth_service.dart';
 import '../screens/products/products_screen.dart';
 import '../screens/categories/categories_screen.dart';
 import '../screens/orders/orders_screen.dart';
@@ -285,7 +284,8 @@ class _HomeScreenState extends State<HomeScreen> {
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
             onTap: () async {
-              await authService.value.signOut();
+              final authProvider = context.read<AuthProvider>();
+              await authProvider.authService.signOut();
             },
           ),
         ],

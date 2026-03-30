@@ -1,19 +1,16 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/app_user.dart';
 
-final authService = ValueNotifier<AuthService>(AuthService());
-
 class AuthService {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  User? get currentUser => _firebaseAuth.currentUser;
-  Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
+  User? get currentUser => _auth.currentUser;
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   Future<UserCredential> signIn(String email, String password) async {
-    return await _firebaseAuth.signInWithEmailAndPassword(
+    return await _auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
@@ -26,12 +23,12 @@ class AuthService {
     required String role,
     String? createdBy,
   }) async {
-    final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+    final userCredential = await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
 
-    await firestore.collection('users').doc(userCredential.user!.uid).set({
+    await _firestore.collection('users').doc(userCredential.user!.uid).set({
       'email': email,
       'fullName': fullName,
       'role': role,
@@ -43,13 +40,13 @@ class AuthService {
   }
 
   Future<void> signOut() async {
-    await _firebaseAuth.signOut();
+    await _auth.signOut();
   }
 
   Future<AppUser?> getCurrentUserData() async {
     if (currentUser == null) return null;
 
-    final doc = await firestore.collection('users').doc(currentUser!.uid).get();
+    final doc = await _firestore.collection('users').doc(currentUser!.uid).get();
     if (doc.exists) {
       return AppUser.fromFirestore(doc);
     }
@@ -60,26 +57,28 @@ class AuthService {
     final adminEmail = 'admin@rongilareshom.com';
 
     try {
-      await _firebaseAuth.signInWithEmailAndPassword(
+      final credential = await _auth.signInWithEmailAndPassword(
         email: adminEmail,
         password: '123456',
       );
-      await _firebaseAuth.signOut();
+      await _auth.signOut();
       return;
     } catch (e) {
       // User doesn't exist, create below
     }
 
-    final credential = await _firebaseAuth.createUserWithEmailAndPassword(
+    final credential = await _auth.createUserWithEmailAndPassword(
       email: adminEmail,
       password: '123456',
     );
 
-    await firestore.collection('users').doc(credential.user!.uid).set({
+    await _firestore.collection('users').doc(credential.user!.uid).set({
       'email': adminEmail,
       'fullName': 'Admin User',
       'role': 'admin',
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
+
+  FirebaseFirestore get firestore => _firestore;
 }

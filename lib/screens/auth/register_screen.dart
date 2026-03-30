@@ -37,7 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       email: _emailController.text.trim(),
       password: _passwordController.text,
       fullName: _fullNameController.text.trim(),
-      role: _selectedRole.toString().split('.').last,
+      role: _selectedRole,
     );
 
     if (success && mounted) {

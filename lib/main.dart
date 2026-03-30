@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'providers/providers.dart';
 import 'services/auth_service.dart';
 import 'widgets/app_theme.dart';
@@ -18,25 +19,30 @@ void main() async {
     debugPrint('Firebase initialization error: $e');
   }
 
-  await authService.value.ensureDefaultAdmin();
+  // Don't call ensureDefaultAdmin here - it interferes with auth persistence
+  // final authService = AuthService();
+  // await authService.ensureDefaultAdmin();
+
+  final authService = AuthService();
 
   final settingsProvider = SettingsProvider();
   await settingsProvider.loadSettings();
 
-  runApp(MyApp(settingsProvider: settingsProvider));
+  runApp(MyApp(settingsProvider: settingsProvider, authService: authService));
 }
 
 class MyApp extends StatelessWidget {
   final SettingsProvider settingsProvider;
+  final AuthService authService;
 
-  const MyApp({super.key, required this.settingsProvider});
+  const MyApp({super.key, required this.settingsProvider, required this.authService});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: settingsProvider),
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider(authService: authService)),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
@@ -53,7 +59,7 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: settingsProvider.themeMode,
-            home: const AuthenticationWrapper(),
+            home: AuthenticationWrapper(authService: authService),
           );
         },
       ),
@@ -61,26 +67,59 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthenticationWrapper extends StatelessWidget {
-  const AuthenticationWrapper({super.key});
+class AuthenticationWrapper extends StatefulWidget {
+  final AuthService authService;
+
+  const AuthenticationWrapper({super.key, required this.authService});
+
+  @override
+  State<AuthenticationWrapper> createState() => _AuthenticationWrapperState();
+}
+
+class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
+  bool _isCheckingAuth = true;
+  bool _isLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthAndListen();
+  }
+
+  Future<void> _checkAuthAndListen() async {
+    // Check current user from Firebase Auth cache
+    final user = firebase_auth.FirebaseAuth.instance.currentUser;
+    debugPrint('[AuthWrapper] Firebase.currentUser: ${user?.uid ?? "null"}');
+    
+    setState(() {
+      _isLoggedIn = user != null;
+      _isCheckingAuth = false;
+    });
+
+    // Also listen to auth state changes for future login/logout
+    widget.authService.authStateChanges.listen((firebaseUser) {
+      debugPrint('[AuthWrapper] authStateChanges: ${firebaseUser?.uid ?? "null"}');
+      if (mounted) {
+        setState(() {
+          _isLoggedIn = firebaseUser != null;
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: authService.value.authStateChanges,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+    if (_isCheckingAuth) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-        if (snapshot.hasData) {
-          return const HomeScreen();
-        }
-
-        return const LoginScreen();
-      },
-    );
+    debugPrint('[AuthWrapper] build: _isLoggedIn=$_isLoggedIn');
+    
+    if (_isLoggedIn) {
+      return const HomeScreen();
+    }
+    return const LoginScreen();
   }
 }

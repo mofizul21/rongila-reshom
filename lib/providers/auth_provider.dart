@@ -4,22 +4,17 @@ import '../models/models.dart';
 import '../services/auth_service.dart';
 
 class AuthProvider with ChangeNotifier {
+  final AuthService _authService;
+
   AppUser? _currentUser;
   bool _isLoading = false;
   String? _error;
 
-  AppUser? get currentUser => _currentUser;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-  bool get isAuthenticated => _currentUser != null;
-  bool get isAdmin => _currentUser?.isAdmin ?? false;
-  bool get isManager => _currentUser?.isManager ?? false;
-
-  AuthProvider() {
+  AuthProvider({required AuthService authService}) : _authService = authService {
     // Listen to auth state changes
-    authService.value.authStateChanges.listen((user) async {
+    _authService.authStateChanges.listen((user) async {
       if (user != null) {
-        _currentUser = await authService.value.getCurrentUserData();
+        _currentUser = await _authService.getCurrentUserData();
       } else {
         _currentUser = null;
       }
@@ -27,13 +22,21 @@ class AuthProvider with ChangeNotifier {
     });
   }
 
+  AuthService get authService => _authService;
+  AppUser? get currentUser => _currentUser;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  bool get isAuthenticated => _currentUser != null;
+  bool get isAdmin => _currentUser?.isAdmin ?? false;
+  bool get isManager => _currentUser?.isManager ?? false;
+
   Future<bool> signIn(String email, String password) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
 
-      await authService.value.signIn(email, password);
+      await _authService.signIn(email, password);
       // authStateChanges will handle updating _currentUser
 
       _isLoading = false;
@@ -51,18 +54,18 @@ class AuthProvider with ChangeNotifier {
     required String email,
     required String password,
     required String fullName,
-    required String role,
+    required UserRole role,
   }) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
 
-      await authService.value.signUp(
+      await _authService.signUp(
         email: email,
         password: password,
         fullName: fullName,
-        role: role,
+        role: role.toString().split('.').last,
         createdBy: _currentUser?.id,
       );
 
@@ -78,27 +81,27 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    await authService.value.signOut();
+    await _authService.signOut();
   }
 
   Future<void> updateFullNameById(String userId, String fullName) async {
-    await authService.value.firestore.collection('users').doc(userId).update({
+    await _authService.firestore.collection('users').doc(userId).update({
       'fullName': fullName,
     });
   }
 
-  Future<void> updateUserRole(String userId, String role) async {
-    await authService.value.firestore.collection('users').doc(userId).update({
-      'role': role,
+  Future<void> updateUserRole(String userId, UserRole role) async {
+    await _authService.firestore.collection('users').doc(userId).update({
+      'role': role.toString().split('.').last,
     });
   }
 
   Future<void> deleteUser(String userId) async {
-    await authService.value.firestore.collection('users').doc(userId).delete();
+    await _authService.firestore.collection('users').doc(userId).delete();
   }
 
   Stream<List<AppUser>> get allUsersStream {
-    return authService.value.firestore.collection('users').snapshots().map(
+    return _authService.firestore.collection('users').snapshots().map(
       (snapshot) => snapshot.docs
           .map((doc) {
             final data = doc.data() as Map<String, dynamic>;

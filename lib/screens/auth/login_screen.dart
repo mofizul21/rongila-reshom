@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/providers.dart';
-import '../../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -32,11 +31,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await authService.value.signIn(
+      final authProvider = context.read<AuthProvider>();
+      await authProvider.authService.signIn(
         _emailController.text.trim(),
         _passwordController.text,
       );
-      // StreamBuilder in AuthenticationWrapper will handle navigation
+      // Auth state changes will be handled by AuthenticationWrapper
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
