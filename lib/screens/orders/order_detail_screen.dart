@@ -33,10 +33,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       ),
       body: Consumer<OrderProvider>(
         builder: (context, orderProvider, child) {
-          // Get updated order
-          final updatedOrder =
-              orderProvider.getOrderById(widget.order.id) ?? widget.order;
-          return _buildBody(updatedOrder);
+          // Get updated order from provider
+          final updatedOrder = orderProvider.getOrderById(widget.order.id);
+          // Use updated order if available, otherwise use the original widget.order
+          final order = updatedOrder ?? widget.order;
+          return _buildBody(order);
         },
       ),
     );

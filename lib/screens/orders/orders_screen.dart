@@ -22,7 +22,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
   @override
   void initState() {
     super.initState();
-    _updateFilteredOrders(context.read<OrderProvider>().orders);
   }
 
   @override
@@ -31,11 +30,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
     super.dispose();
   }
 
-  void _updateFilteredOrders(List<OrderModel> orders) {
-    if (_searchController.text.isEmpty && _selectedStatus == null) {
-      setState(() {
-        _filteredOrders = orders;
-      });
+  Future<void> _showOrderDetail(OrderModel order) async {
+    // Navigate and wait for result
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => OrderDetailScreen(order: order)),
+    );
+    // Refresh when returning from order detail screen
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -60,14 +62,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => OrderFormScreen(order: order),
-      ),
-    );
-  }
-
-  void _showOrderDetail(OrderModel order) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => OrderDetailScreen(order: order),
       ),
     );
   }
@@ -124,6 +118,21 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final orderProvider = context.watch<OrderProvider>();
+    
+    // Update filtered orders when provider changes
+    if (_searchController.text.isEmpty && _selectedStatus == null) {
+      // No filter, use all orders
+      _filteredOrders = orderProvider.orders;
+    } else if (_selectedStatus != null) {
+      // Status filter active
+      _filteredOrders = orderProvider.orders
+          .where((o) => o.status == _selectedStatus)
+          .toList();
+    }
+    
+    final ordersToShow = _filteredOrders;
+
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showOrderForm(),
@@ -225,39 +234,27 @@ class _OrdersScreenState extends State<OrdersScreen> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: Consumer<OrderProvider>(
-              builder: (context, orderProvider, child) {
-                final ordersToShow = (_searchController.text.isEmpty && _selectedStatus == null)
-                    ? orderProvider.orders
-                    : _filteredOrders;
-
-                if (orderProvider.isLoading && ordersToShow.isEmpty) {
-                  return const LoadingWidget(message: 'Loading orders...');
-                }
-
-                if (ordersToShow.isEmpty) {
-                  return const EmptyWidget(
-                    message: 'No orders found.\nTap + to create a new order.',
-                    icon: Icons.shopping_cart_outlined,
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 80),
-                  itemCount: ordersToShow.length,
-                  itemBuilder: (context, index) {
-                    final order = ordersToShow[index];
-                    return OrderCard(
-                      order: order,
-                      onTap: () => _showOrderDetail(order),
-                      onEdit: () => _showOrderForm(order: order),
-                      onDelete: () => _confirmDelete(order),
-                      onDuplicate: () => _confirmDuplicate(order),
-                    );
-                  },
-                );
-              },
-            ),
+            child: ordersToShow.isEmpty
+                ? (orderProvider.isLoading
+                    ? const LoadingWidget(message: 'Loading orders...')
+                    : const EmptyWidget(
+                        message: 'No orders found.\nTap + to create a new order.',
+                        icon: Icons.shopping_cart_outlined,
+                      ))
+                : ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 80),
+                    itemCount: ordersToShow.length,
+                    itemBuilder: (context, index) {
+                      final order = ordersToShow[index];
+                      return OrderCard(
+                        order: order,
+                        onTap: () => _showOrderDetail(order),
+                        onEdit: () => _showOrderForm(order: order),
+                        onDelete: () => _confirmDelete(order),
+                        onDuplicate: () => _confirmDuplicate(order),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
