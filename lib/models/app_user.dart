@@ -21,15 +21,25 @@ class AppUser {
 
   factory AppUser.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    final roleStr = data['role'] ?? 'manager';
+    UserRole role;
+    if (roleStr is UserRole) {
+      role = roleStr;
+    } else if (roleStr is String) {
+      role = UserRole.values.firstWhere(
+        (e) => e.toString() == 'UserRole.$roleStr' || e.name == roleStr,
+        orElse: () => UserRole.manager,
+      );
+    } else {
+      role = UserRole.manager;
+    }
+    
     return AppUser(
       id: doc.id,
       email: data['email'] ?? '',
       fullName: data['fullName'],
-      role: UserRole.values.firstWhere(
-        (e) => e.toString() == 'UserRole.${data['role']}',
-        orElse: () => UserRole.manager,
-      ),
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      role: role,
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       createdBy: data['createdBy'],
     );
   }

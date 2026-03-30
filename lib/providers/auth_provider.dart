@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import '../models/app_user.dart';
 import '../models/models.dart';
 import '../services/auth_service.dart';
 
@@ -105,11 +106,16 @@ class AuthProvider with ChangeNotifier {
       (snapshot) => snapshot.docs
           .map((doc) {
             final data = doc.data() as Map<String, dynamic>;
+            final roleStr = data['role'] ?? 'manager';
+            final role = UserRole.values.firstWhere(
+              (e) => e.toString() == 'UserRole.$roleStr' || e.name == roleStr,
+              orElse: () => UserRole.manager,
+            );
             return AppUser(
               id: doc.id,
               email: data['email'] ?? '',
               fullName: data['fullName'],
-              role: data['role'] ?? 'manager',
+              role: role,
               createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
             );
           })
