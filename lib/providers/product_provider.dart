@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/models.dart';
@@ -9,6 +11,7 @@ class ProductProvider with ChangeNotifier {
   List<Product> _products = [];
   bool _isLoading = false;
   String? _error;
+  StreamSubscription? _productsSubscription;
 
   List<Product> get products => _products;
   bool get isLoading => _isLoading;
@@ -19,10 +22,18 @@ class ProductProvider with ChangeNotifier {
   }
 
   void _initProductsStream() {
-    _databaseService.productsStream.listen((products) {
+    _productsSubscription = _databaseService.productsStream.listen((products) {
       _products = products;
       notifyListeners();
+    }, onError: (error) {
+      // Ignore errors (e.g., permission denied after logout)
     });
+  }
+
+  @override
+  void dispose() {
+    _productsSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> addProduct({

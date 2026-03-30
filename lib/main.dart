@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-
 import 'providers/providers.dart';
-import 'services/services.dart';
+import 'services/auth_service.dart';
 import 'widgets/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -12,14 +11,15 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    debugPrint('Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('Firebase initialization error: $e');
+  }
 
-  // Ensure default admin user exists
-  final authService = AuthService();
-  await authService.ensureDefaultAdmin();
+  await authService.value.ensureDefaultAdmin();
 
-  // Load saved settings
   final settingsProvider = SettingsProvider();
   await settingsProvider.loadSettings();
 
@@ -66,11 +66,19 @@ class AuthenticationWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        if (authProvider.isAuthenticated) {
+    return StreamBuilder(
+      stream: authService.value.authStateChanges,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasData) {
           return const HomeScreen();
         }
+
         return const LoginScreen();
       },
     );

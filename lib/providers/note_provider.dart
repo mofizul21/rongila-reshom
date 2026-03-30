@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/models.dart';
@@ -9,6 +11,7 @@ class NoteProvider with ChangeNotifier {
   List<Note> _notes = [];
   bool _isLoading = false;
   String? _error;
+  StreamSubscription? _notesSubscription;
 
   List<Note> get notes => _notes;
   bool get isLoading => _isLoading;
@@ -19,10 +22,18 @@ class NoteProvider with ChangeNotifier {
   }
 
   void _initNotesStream() {
-    _databaseService.notesStream.listen((notes) {
+    _notesSubscription = _databaseService.notesStream.listen((notes) {
       _notes = notes;
       notifyListeners();
+    }, onError: (error) {
+      // Ignore errors (e.g., permission denied after logout)
     });
+  }
+
+  @override
+  void dispose() {
+    _notesSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> addNote({

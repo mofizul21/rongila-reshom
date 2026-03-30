@@ -1,10 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
-import '../services/services.dart';
+import '../services/auth_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  final AuthService _authService = AuthService();
-  
   AppUser? _currentUser;
   bool _isLoading = false;
   String? _error;
@@ -17,18 +16,14 @@ class AuthProvider with ChangeNotifier {
   bool get isManager => _currentUser?.isManager ?? false;
 
   AuthProvider() {
-    _initAuthState();
-  }
-
-  void _initAuthState() {
-    _authService.authStateChanges.listen((user) async {
+    // Listen to auth state changes
+    authService.value.authStateChanges.listen((user) async {
       if (user != null) {
-        _currentUser = await _authService.getCurrentUserData();
-        notifyListeners();
+        _currentUser = await authService.value.getCurrentUserData();
       } else {
         _currentUser = null;
-        notifyListeners();
       }
+      notifyListeners();
     });
   }
 
@@ -38,13 +33,8 @@ class AuthProvider with ChangeNotifier {
       _error = null;
       notifyListeners();
 
-      await _authService.signIn(email, password);
-      
-      // Wait a moment for Firebase to process the login
-      await Future.delayed(const Duration(milliseconds: 300));
-      
-      // Get user data from Firestore
-      _currentUser = await _authService.getCurrentUserData();
+      await authService.value.signIn(email, password);
+      // authStateChanges will handle updating _currentUser
 
       _isLoading = false;
       notifyListeners();
@@ -61,14 +51,14 @@ class AuthProvider with ChangeNotifier {
     required String email,
     required String password,
     required String fullName,
-    required UserRole role,
+    required String role,
   }) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
 
-      await _authService.signUp(
+      await authService.value.signUp(
         email: email,
         password: password,
         fullName: fullName,
@@ -88,85 +78,41 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    await _authService.signOut();
-    _currentUser = null;
-    notifyListeners();
+    await authService.value.signOut();
   }
 
-  Future<void> resetPassword(String email) async {
-    try {
-      await _authService.resetPassword(email);
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  Future<void> updateEmail(String newEmail) async {
-    try {
-      await _authService.updateEmail(newEmail);
-      _currentUser = await _authService.getCurrentUserData();
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  Future<void> updatePassword(String newPassword) async {
-    try {
-      await _authService.updatePassword(newPassword);
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  Future<void> updateFullName(String fullName) async {
-    try {
-      await _authService.updateFullName(fullName);
-      _currentUser = await _authService.getCurrentUserData();
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  Future<void> updateUserRole(String userId, UserRole role) async {
-    try {
-      await _authService.updateUserRole(userId, role);
-      _currentUser = await _authService.getCurrentUserData();
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  // Update user full name by ID (for admin)
   Future<void> updateFullNameById(String userId, String fullName) async {
-    try {
-      await _authService.updateFullNameById(userId, fullName);
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
+    await authService.value.firestore.collection('users').doc(userId).update({
+      'fullName': fullName,
+    });
   }
 
-  // Delete user (Admin only)
+  Future<void> updateUserRole(String userId, String role) async {
+    await authService.value.firestore.collection('users').doc(userId).update({
+      'role': role,
+    });
+  }
+
   Future<void> deleteUser(String userId) async {
-    try {
-      await _authService.deleteUser(userId);
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
+    await authService.value.firestore.collection('users').doc(userId).delete();
   }
 
-  Stream<List<AppUser>> get allUsersStream => _authService.allUsersStream;
+  Stream<List<AppUser>> get allUsersStream {
+    return authService.value.firestore.collection('users').snapshots().map(
+      (snapshot) => snapshot.docs
+          .map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return AppUser(
+              id: doc.id,
+              email: data['email'] ?? '',
+              fullName: data['fullName'],
+              role: data['role'] ?? 'manager',
+              createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            );
+          })
+          .toList(),
+    );
+  }
 
   void clearError() {
     _error = null;

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/providers.dart';
+import '../services/auth_service.dart';
 import '../screens/products/products_screen.dart';
 import '../screens/categories/categories_screen.dart';
 import '../screens/orders/orders_screen.dart';
@@ -13,7 +14,6 @@ import '../screens/users/users_screen.dart';
 import '../screens/payments/payment_history_screen.dart';
 import '../screens/suppliers/suppliers_screen.dart';
 import '../screens/settings/settings_screen.dart';
-import '../screens/auth/login_screen.dart';
 import '../widgets/common_widgets.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -285,12 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
             onTap: () async {
-              await authProvider.signOut();
-              if (context.mounted) {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
-              }
+              await authService.value.signOut();
             },
           ),
         ],

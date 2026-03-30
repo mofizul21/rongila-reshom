@@ -192,7 +192,7 @@ class _EditUserDialogState extends State<EditUserDialog> {
 
     // Update role
     if (_selectedRole != widget.user.role) {
-      await authProvider.updateUserRole(widget.user.id, _selectedRole);
+      await authProvider.updateUserRole(widget.user.id, _selectedRole.toString().split('.').last);
     }
 
     setState(() {

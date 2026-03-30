@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/models.dart';
@@ -9,6 +11,7 @@ class CategoryProvider with ChangeNotifier {
   List<CategoryModel> _categories = [];
   bool _isLoading = false;
   String? _error;
+  StreamSubscription? _categoriesSubscription;
 
   List<CategoryModel> get categories => _categories;
   bool get isLoading => _isLoading;
@@ -28,10 +31,18 @@ class CategoryProvider with ChangeNotifier {
   }
 
   void _initCategoriesStream() {
-    _databaseService.categoriesStream.listen((categories) {
+    _categoriesSubscription = _databaseService.categoriesStream.listen((categories) {
       _categories = categories;
       notifyListeners();
+    }, onError: (error) {
+      // Ignore errors (e.g., permission denied after logout)
     });
+  }
+
+  @override
+  void dispose() {
+    _categoriesSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> addCategory({
