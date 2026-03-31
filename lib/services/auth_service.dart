@@ -57,7 +57,7 @@ class AuthService {
     final adminEmail = 'admin@rongilareshom.com';
 
     try {
-      final credential = await _auth.signInWithEmailAndPassword(
+      await _auth.signInWithEmailAndPassword(
         email: adminEmail,
         password: '123456',
       );

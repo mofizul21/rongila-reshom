@@ -89,8 +89,7 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
   Future<void> _checkAuthAndListen() async {
     // Check current user from Firebase Auth cache
     final user = firebase_auth.FirebaseAuth.instance.currentUser;
-    debugPrint('[AuthWrapper] Firebase.currentUser: ${user?.uid ?? "null"}');
-    
+
     setState(() {
       _isLoggedIn = user != null;
       _isCheckingAuth = false;
@@ -98,7 +97,6 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
 
     // Also listen to auth state changes for future login/logout
     widget.authService.authStateChanges.listen((firebaseUser) {
-      debugPrint('[AuthWrapper] authStateChanges: ${firebaseUser?.uid ?? "null"}');
       if (mounted) {
         setState(() {
           _isLoggedIn = firebaseUser != null;
@@ -115,8 +113,6 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
       );
     }
 
-    debugPrint('[AuthWrapper] build: _isLoggedIn=$_isLoggedIn');
-    
     if (_isLoggedIn) {
       return const HomeScreen();
     }
