@@ -13,7 +13,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     debugPrint('Firebase initialized successfully');
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
@@ -35,14 +37,20 @@ class MyApp extends StatelessWidget {
   final SettingsProvider settingsProvider;
   final AuthService authService;
 
-  const MyApp({super.key, required this.settingsProvider, required this.authService});
+  const MyApp({
+    super.key,
+    required this.settingsProvider,
+    required this.authService,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: settingsProvider),
-        ChangeNotifierProvider(create: (_) => AuthProvider(authService: authService)),
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(authService: authService),
+        ),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
@@ -108,9 +116,7 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
   @override
   Widget build(BuildContext context) {
     if (_isCheckingAuth) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_isLoggedIn) {

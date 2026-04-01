@@ -126,6 +126,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   0,
                   (sum, order) => sum + order.dueAmount,
                 );
+                final monthlyDeposit = monthlyOrders.fold<double>(
+                  0,
+                  (sum, order) => sum + order.depositAmount,
+                );
 
                 // Calculate 5-month sales data for chart (ending at selected month)
                 final monthlySales = _calculateMonthlySales(
@@ -196,6 +200,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   0,
                   (sum, order) => sum + order.dueAmount,
                 );
+                final lifetimeDeposit = orderProvider.orders.fold<double>(
+                  0,
+                  (sum, order) => sum + order.depositAmount,
+                );
 
                 // Calculate Lifetime Total Purchase (Total cost of ALL products ever added)
                 final double lifetimePurchaseCost = allProducts.fold<double>(
@@ -236,6 +244,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         monthlyDue,
                         monthlyProfit,
                         totalPurchaseCost,
+                        monthlyDeposit,
                       ),
                       const SizedBox(height: 24),
                       // Chart
@@ -248,6 +257,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         lifetimeDue,
                         lifetimeProfit,
                         lifetimePurchaseCost,
+                        lifetimeDeposit,
                       ),
                     ],
                   ),
@@ -374,30 +384,59 @@ class _ReportsScreenState extends State<ReportsScreen> {
     double due,
     double profit,
     double purchase,
+    double deposit,
   ) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.5,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildStatCard(context, 'Sale', sale, Icons.shopping_cart, Colors.blue),
-        _buildStatCard(
-          context,
-          'Purchase',
-          purchase,
-          Icons.inventory,
-          Colors.orange,
+        // First row: 3 cards
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(context, 'Sale', sale, Icons.shopping_cart, Colors.blue),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
+                context,
+                'Purchase',
+                purchase,
+                Icons.inventory,
+                Colors.orange,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(context, 'Due', due, Icons.money_off, Colors.red),
+            ),
+          ],
         ),
-        _buildStatCard(context, 'Due', due, Icons.money_off, Colors.red),
-        _buildStatCard(
-          context,
-          'Profit',
-          profit,
-          Icons.trending_up,
-          Colors.green,
+        const SizedBox(height: 12),
+        // Second row: 2 cards centered
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                context,
+                'Profit',
+                profit,
+                Icons.trending_up,
+                Colors.green,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
+                context,
+                'Deposit',
+                deposit,
+                Icons.payment,
+                Colors.purple,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(child: SizedBox.shrink()), // Spacer for balance
+          ],
         ),
       ],
     );
@@ -412,9 +451,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
   ) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Icon and Title in same row
@@ -443,7 +482,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             // Amount in separate row
             Text(
               '৳${NumberFormat('#,##,##0').format(amount)}',
@@ -627,6 +666,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     double lifetimeDue,
     double lifetimeProfit,
     double lifetimePurchase,
+    double lifetimeDeposit,
   ) {
     return Card(
       color: Theme.of(context).colorScheme.primaryContainer,
@@ -659,6 +699,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
               'Total Purchase',
               lifetimePurchase,
               Colors.orange,
+            ),
+            const Divider(),
+            _buildLifetimeRow(
+              context,
+              'Total Deposit',
+              lifetimeDeposit,
+              Colors.green,
             ),
             const Divider(),
             _buildLifetimeRow(context, 'Total Due', lifetimeDue, Colors.red),
