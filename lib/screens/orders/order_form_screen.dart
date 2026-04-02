@@ -642,14 +642,17 @@ class _ProductSelectionScreenState extends State<ProductSelectionScreen> {
                   );
                 }
 
-                // Use filtered products and exclude products with 0 or less quantity
+                // When editing, show products with stock > 0 PLUS already selected products
+                // This ensures we can see and modify previously purchased items even if stock is 0
                 final availableProducts = productProvider.products
-                    .where((p) => p.quantity > 0)
+                    .where((p) => p.quantity > 0 || _quantities.containsKey(p.id))
                     .toList();
 
                 final productsToShow = _filteredProducts.isEmpty
                     ? availableProducts
-                    : _filteredProducts.where((p) => p.quantity > 0).toList();
+                    : _filteredProducts
+                        .where((p) => p.quantity > 0 || _quantities.containsKey(p.id))
+                        .toList();
 
                 return ListView.builder(
                   itemCount: productsToShow.length,
