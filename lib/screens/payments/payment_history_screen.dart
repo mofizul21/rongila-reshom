@@ -5,6 +5,7 @@ import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/typography.dart';
+import '../orders/order_detail_screen.dart';
 
 class PaymentHistoryScreen extends StatefulWidget {
   const PaymentHistoryScreen({super.key});
@@ -160,10 +161,10 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
           margin: const EdgeInsets.only(bottom: 8),
           child: InkWell(
             onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/order-detail',
-                arguments: order,
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => OrderDetailScreen(order: order),
+                ),
               );
             },
             child: Padding(
@@ -303,10 +304,10 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
           margin: const EdgeInsets.only(bottom: 8),
           child: InkWell(
             onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/order-detail',
-                arguments: order,
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => OrderDetailScreen(order: order),
+                ),
               );
             },
             child: Padding(
