@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/long_press_refresh_wrapper.dart';
 import '../../widgets/product_card.dart';
 import 'product_form_screen.dart';
 
@@ -104,6 +105,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
     );
   }
 
+  Future<void> _refreshProducts() async {
+    setState(() {});
+    await Future.delayed(const Duration(milliseconds: 300));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -152,18 +158,21 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 80),
-                  itemCount: productsToShow.length,
-                  itemBuilder: (context, index) {
-                    final product = productsToShow[index];
-                    return ProductCard(
-                      product: product,
-                      onEdit: () => _showProductForm(product: product),
-                      onDelete: () => _confirmDelete(product),
-                      onDuplicate: () => _confirmDuplicate(product),
-                    );
-                  },
+                return LongPressRefreshWrapper(
+                  onRefresh: _refreshProducts,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 80),
+                    itemCount: productsToShow.length,
+                    itemBuilder: (context, index) {
+                      final product = productsToShow[index];
+                      return ProductCard(
+                        product: product,
+                        onEdit: () => _showProductForm(product: product),
+                        onDelete: () => _confirmDelete(product),
+                        onDuplicate: () => _confirmDuplicate(product),
+                      );
+                    },
+                  ),
                 );
               },
             ),

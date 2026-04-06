@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/long_press_refresh_wrapper.dart';
 import 'note_form_screen.dart';
 
 class NotesScreen extends StatefulWidget {
@@ -123,10 +124,15 @@ class _NotesScreenState extends State<NotesScreen> {
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 80),
-                  itemCount: notesToShow.length,
-                  itemBuilder: (context, index) {
+                return LongPressRefreshWrapper(
+                  onRefresh: () async {
+                    setState(() {});
+                    await Future.delayed(const Duration(milliseconds: 300));
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 80),
+                    itemCount: notesToShow.length,
+                    itemBuilder: (context, index) {
                     final note = notesToShow[index];
                     return Card(
                       margin: const EdgeInsets.symmetric(
@@ -171,7 +177,8 @@ class _NotesScreenState extends State<NotesScreen> {
                       ),
                     );
                   },
-                );
+                ),
+              );
               },
             ),
           ),

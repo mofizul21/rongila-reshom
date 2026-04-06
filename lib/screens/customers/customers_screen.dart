@@ -4,6 +4,7 @@ import 'package:provider/provider.dart' as p show Consumer2;
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/long_press_refresh_wrapper.dart';
 import '../../widgets/customer_card.dart';
 import 'customer_form_screen.dart';
 import 'customer_detail_screen.dart';
@@ -133,29 +134,35 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 80),
-                  itemCount: customersToShow.length,
-                  itemBuilder: (context, index) {
-                    final customer = customersToShow[index];
-
-                    // Create a customer copy with updated order count
-                    final customerWithOrders = customer.copyWith(
-                      orderIds: orderProvider.orders
-                          .where(
-                            (order) => order.customerPhone == customer.phone,
-                          )
-                          .map((order) => order.id)
-                          .toList(),
-                    );
-
-                    return CustomerCard(
-                      customer: customerWithOrders,
-                      onTap: () => _showCustomerDetail(customer),
-                      onEdit: () => _showCustomerForm(customer: customer),
-                      onDelete: () => _confirmDelete(customer),
-                    );
+                return LongPressRefreshWrapper(
+                  onRefresh: () async {
+                    setState(() {});
+                    await Future.delayed(const Duration(milliseconds: 300));
                   },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 80),
+                    itemCount: customersToShow.length,
+                    itemBuilder: (context, index) {
+                      final customer = customersToShow[index];
+
+                      // Create a customer copy with updated order count
+                      final customerWithOrders = customer.copyWith(
+                        orderIds: orderProvider.orders
+                            .where(
+                              (order) => order.customerPhone == customer.phone,
+                            )
+                            .map((order) => order.id)
+                            .toList(),
+                      );
+
+                      return CustomerCard(
+                        customer: customerWithOrders,
+                        onTap: () => _showCustomerDetail(customer),
+                        onEdit: () => _showCustomerForm(customer: customer),
+                        onDelete: () => _confirmDelete(customer),
+                      );
+                    },
+                  ),
                 );
               },
             ),

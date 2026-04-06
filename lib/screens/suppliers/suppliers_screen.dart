@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/long_press_refresh_wrapper.dart';
 import 'supplier_form_screen.dart';
 
 class SuppliersScreen extends StatefulWidget {
@@ -56,10 +57,15 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: supplierProvider.suppliers.length,
-            itemBuilder: (context, index) {
+          return LongPressRefreshWrapper(
+            onRefresh: () async {
+              setState(() {});
+              await Future.delayed(const Duration(milliseconds: 300));
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: supplierProvider.suppliers.length,
+              itemBuilder: (context, index) {
               final supplier = supplierProvider.suppliers[index];
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
@@ -134,7 +140,8 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
                 ),
               );
             },
-          );
+          ),
+        );
         },
       ),
     );

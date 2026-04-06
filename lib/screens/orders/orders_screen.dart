@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/long_press_refresh_wrapper.dart';
 import '../../widgets/order_card.dart';
 import 'order_form_screen.dart';
 import 'order_detail_screen.dart';
@@ -114,6 +115,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _refreshOrders() async {
+    // Trigger a refresh by re-fetching data
+    // The provider already uses streams, so just triggering a rebuild
+    setState(() {});
+    // Small delay to show the refresh indicator
+    await Future.delayed(const Duration(milliseconds: 300));
   }
 
   @override
@@ -241,19 +250,22 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         message: 'No orders found.\nTap + to create a new order.',
                         icon: Icons.shopping_cart_outlined,
                       ))
-                : ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 80),
-                    itemCount: ordersToShow.length,
-                    itemBuilder: (context, index) {
-                      final order = ordersToShow[index];
-                      return OrderCard(
-                        order: order,
-                        onTap: () => _showOrderDetail(order),
-                        onEdit: () => _showOrderForm(order: order),
-                        onDelete: () => _confirmDelete(order),
-                        onDuplicate: () => _confirmDuplicate(order),
-                      );
-                    },
+                : LongPressRefreshWrapper(
+                    onRefresh: _refreshOrders,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.only(bottom: 80),
+                      itemCount: ordersToShow.length,
+                      itemBuilder: (context, index) {
+                        final order = ordersToShow[index];
+                        return OrderCard(
+                          order: order,
+                          onTap: () => _showOrderDetail(order),
+                          onEdit: () => _showOrderForm(order: order),
+                          onDelete: () => _confirmDelete(order),
+                          onDuplicate: () => _confirmDuplicate(order),
+                        );
+                      },
+                    ),
                   ),
           ),
         ],

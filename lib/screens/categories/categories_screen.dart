@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/long_press_refresh_wrapper.dart';
 import 'category_form_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -59,10 +60,15 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
           return Consumer<ProductProvider>(
             builder: (context, productProvider, child) {
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: categoryProvider.categories.length,
-                itemBuilder: (context, index) {
+              return LongPressRefreshWrapper(
+                onRefresh: () async {
+                  setState(() {});
+                  await Future.delayed(const Duration(milliseconds: 300));
+                },
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: categoryProvider.categories.length,
+                  itemBuilder: (context, index) {
                   final category = categoryProvider.categories[index];
                   
                   // Calculate total quantity and total purchase amount for this category
@@ -132,7 +138,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     ),
                   );
                 },
-              );
+              ),
+            );
             },
           );
         },
