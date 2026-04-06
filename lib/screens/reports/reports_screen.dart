@@ -105,8 +105,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
           _buildMonthYearSelector(),
           // Stats
           Expanded(
-            child: Consumer2<OrderProvider, ProductProvider>(
-              builder: (context, orderProvider, productProvider, child) {
+            child: Consumer3<OrderProvider, ProductProvider, AccountProvider>(
+              builder: (context, orderProvider, productProvider, accountProvider, child) {
                 // Filter orders for selected month
                 final monthlyOrders = orderProvider.orders.where((order) {
                   return order.orderDate.isAfter(
@@ -258,6 +258,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         lifetimeProfit,
                         lifetimePurchaseCost,
                         lifetimeDeposit,
+                        accountProvider,
                       ),
                     ],
                   ),
@@ -667,7 +668,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
     double lifetimeProfit,
     double lifetimePurchase,
     double lifetimeDeposit,
+    AccountProvider accountProvider,
   ) {
+    // Calculate adjusted deposit
+    final totalWithdrawals = accountProvider.totalWithdrawals;
+    final adjustedDeposit = lifetimeDeposit - totalWithdrawals;
+
     return Card(
       color: Theme.of(context).colorScheme.primaryContainer,
       child: Padding(
@@ -707,6 +713,23 @@ class _ReportsScreenState extends State<ReportsScreen> {
               lifetimeDeposit,
               Colors.green,
             ),
+            if (totalWithdrawals > 0) ...[
+              const Divider(),
+              _buildLifetimeRow(
+                context,
+                'Total Withdrawn',
+                totalWithdrawals,
+                Colors.red,
+              ),
+              const Divider(),
+              _buildLifetimeRow(
+                context,
+                'Net Deposit',
+                adjustedDeposit,
+                Colors.purple,
+                isBold: true,
+              ),
+            ],
             const Divider(),
             _buildLifetimeRow(context, 'Total Due', lifetimeDue, Colors.red),
             const Divider(),
@@ -726,8 +749,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
     BuildContext context,
     String label,
     double amount,
-    Color color,
-  ) {
+    Color color, {
+    bool isBold = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -737,12 +761,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
             label,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: Theme.of(context).colorScheme.onPrimaryContainer,
+              fontWeight: isBold ? FontWeight.bold : null,
             ),
           ),
           Text(
             '৳${NumberFormat('#,##,##0').format(amount.round())}',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.bold,
               color: color,
             ),
           ),

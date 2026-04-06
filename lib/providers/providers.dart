@@ -7,3 +7,4 @@ export 'note_provider.dart';
 export 'supplier_provider.dart';
 export 'report_provider.dart';
 export 'settings_provider.dart';
+export 'account_provider.dart';

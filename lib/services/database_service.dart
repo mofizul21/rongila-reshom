@@ -4,6 +4,37 @@ import '../models/models.dart';
 class DatabaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // ============ Withdrawals ============
+  Stream<List<Withdrawal>> get withdrawalsStream {
+    return _firestore
+        .collection('withdrawals')
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Withdrawal.fromFirestore(doc))
+              .toList(),
+        );
+  }
+
+  Future<void> addWithdrawal(Withdrawal withdrawal) async {
+    await _firestore
+        .collection('withdrawals')
+        .doc(withdrawal.id)
+        .set(withdrawal.toFirestore());
+  }
+
+  Future<void> updateWithdrawal(Withdrawal withdrawal) async {
+    await _firestore
+        .collection('withdrawals')
+        .doc(withdrawal.id)
+        .update(withdrawal.toFirestore());
+  }
+
+  Future<void> deleteWithdrawal(String withdrawalId) async {
+    await _firestore.collection('withdrawals').doc(withdrawalId).delete();
+  }
+
   // ============ Products ============
   Stream<List<Product>> get productsStream {
     return _firestore

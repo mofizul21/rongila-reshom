@@ -13,6 +13,7 @@ import '../screens/users/users_screen.dart';
 import '../screens/payments/payment_history_screen.dart';
 import '../screens/suppliers/suppliers_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/accounts/accounts_screen.dart';
 import '../widgets/common_widgets.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -74,29 +75,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Widget> _getScreens(bool isAdmin) {
     final screens = <Widget>[];
-    
+
     // All users can access these
     screens.add(const OrdersScreen());
-    
+
     // Only Admin can access these
     if (isAdmin) {
       screens.add(const ProductsScreen());
       screens.add(const CategoriesScreen());
     }
-    
+
     // All users can access these
     screens.add(const CustomersScreen());
     screens.add(const PaymentHistoryScreen());
-    
+
     // Only Admin can access these
     if (isAdmin) {
       screens.add(const NotesScreen());
       screens.add(const SuppliersScreen());
     }
-    
+
     // All users can access Reports
     screens.add(const ReportsScreen());
-    
+
+    // All users can access Accounts
+    screens.add(const AccountsScreen());
+
     // Only admin can access Settings and Users
     if (isAdmin) {
       screens.add(const SettingsScreen());
@@ -117,8 +121,9 @@ class _HomeScreenState extends State<HomeScreen> {
         'Notes',            // 5
         'Suppliers',        // 6
         'Reports',          // 7
-        'Settings',         // 8
-        'Users',            // 9
+        'Accounts',         // 8
+        'Settings',         // 9
+        'Users',            // 10
       ];
       if (_selectedIndex < adminTitles.length) {
         return adminTitles[_selectedIndex];
@@ -130,12 +135,13 @@ class _HomeScreenState extends State<HomeScreen> {
         'Customers',        // 1
         'Payment History',  // 2
         'Reports',          // 3
+        'Accounts',         // 4
       ];
       if (_selectedIndex < managerTitles.length) {
         return managerTitles[_selectedIndex];
       }
     }
-    
+
     return 'Rongila Reshom';
   }
 
@@ -265,18 +271,24 @@ class _HomeScreenState extends State<HomeScreen> {
             title: 'Reports',
             index: isAdmin ? 7 : 3,
           ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.account_balance_wallet_outlined,
+            title: 'Accounts',
+            index: isAdmin ? 8 : 4,
+          ),
           if (isAdmin) ...[
             _buildDrawerItem(
               context,
               icon: Icons.settings_outlined,
               title: 'Settings',
-              index: 8,
+              index: 9,
             ),
             _buildDrawerItem(
               context,
               icon: Icons.manage_accounts_outlined,
               title: 'Users',
-              index: 9,
+              index: 10,
             ),
           ],
           const Divider(),
