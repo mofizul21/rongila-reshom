@@ -4,35 +4,39 @@ import '../models/models.dart';
 class DatabaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ============ Withdrawals ============
-  Stream<List<Withdrawal>> get withdrawalsStream {
+  // ============ Account Transactions ============
+  Stream<List<AccountTransaction>> get accountTransactionsStream {
     return _firestore
-        .collection('withdrawals')
+        .collection('account_transactions')
         .orderBy('date', descending: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => Withdrawal.fromFirestore(doc))
+              .map((doc) => AccountTransaction.fromFirestore(doc))
               .toList(),
         );
   }
 
-  Future<void> addWithdrawal(Withdrawal withdrawal) async {
+  Future<void> addAccountTransaction(AccountTransaction transaction) async {
     await _firestore
-        .collection('withdrawals')
-        .doc(withdrawal.id)
-        .set(withdrawal.toFirestore());
+        .collection('account_transactions')
+        .doc(transaction.id)
+        .set(transaction.toFirestore());
   }
 
-  Future<void> updateWithdrawal(Withdrawal withdrawal) async {
+  Future<void> updateAccountTransaction(
+      AccountTransaction transaction) async {
     await _firestore
-        .collection('withdrawals')
-        .doc(withdrawal.id)
-        .update(withdrawal.toFirestore());
+        .collection('account_transactions')
+        .doc(transaction.id)
+        .update(transaction.toFirestore());
   }
 
-  Future<void> deleteWithdrawal(String withdrawalId) async {
-    await _firestore.collection('withdrawals').doc(withdrawalId).delete();
+  Future<void> deleteAccountTransaction(String transactionId) async {
+    await _firestore
+        .collection('account_transactions')
+        .doc(transactionId)
+        .delete();
   }
 
   // ============ Products ============

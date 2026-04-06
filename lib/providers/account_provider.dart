@@ -8,26 +8,38 @@ import '../services/services.dart';
 class AccountProvider with ChangeNotifier {
   final DatabaseService _databaseService = DatabaseService();
 
-  List<Withdrawal> _withdrawals = [];
+  List<AccountTransaction> _transactions = [];
   bool _isLoading = false;
   String? _error;
-  StreamSubscription? _withdrawalsSubscription;
+  StreamSubscription? _transactionsSubscription;
 
-  List<Withdrawal> get withdrawals => _withdrawals;
+  List<AccountTransaction> get transactions => _transactions;
+
+  List<AccountTransaction> get deposits =>
+      _transactions.where((t) => t.type == TransactionType.deposit).toList();
+
+  List<AccountTransaction> get withdrawals =>
+      _transactions.where((t) => t.type == TransactionType.withdraw).toList();
+
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  double get totalDeposits =>
+      deposits.fold(0, (sum, t) => sum + t.amount);
+
   double get totalWithdrawals =>
-      _withdrawals.fold(0, (sum, w) => sum + w.amount);
+      withdrawals.fold(0, (sum, t) => sum + t.amount);
+
+  double get netBalance => totalDeposits - totalWithdrawals;
 
   AccountProvider() {
-    _initWithdrawalsStream();
+    _initTransactionsStream();
   }
 
-  void _initWithdrawalsStream() {
-    _withdrawalsSubscription =
-        _databaseService.withdrawalsStream.listen((withdrawals) {
-      _withdrawals = withdrawals;
+  void _initTransactionsStream() {
+    _transactionsSubscription =
+        _databaseService.accountTransactionsStream.listen((transactions) {
+      _transactions = transactions;
       notifyListeners();
     }, onError: (error) {
       // Ignore errors (e.g., permission denied after logout)
@@ -36,11 +48,12 @@ class AccountProvider with ChangeNotifier {
 
   @override
   void dispose() {
-    _withdrawalsSubscription?.cancel();
+    _transactionsSubscription?.cancel();
     super.dispose();
   }
 
-  Future<void> addWithdrawal({
+  Future<void> addTransaction({
+    required TransactionType type,
     required double amount,
     required DateTime date,
     String? note,
@@ -49,8 +62,9 @@ class AccountProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      final withdrawal = Withdrawal(
+      final transaction = AccountTransaction(
         id: const Uuid().v4(),
+        type: type,
         amount: amount,
         date: date,
         note: note,
@@ -58,7 +72,7 @@ class AccountProvider with ChangeNotifier {
         updatedAt: DateTime.now(),
       );
 
-      await _databaseService.addWithdrawal(withdrawal);
+      await _databaseService.addAccountTransaction(transaction);
 
       _isLoading = false;
       notifyListeners();
@@ -69,7 +83,7 @@ class AccountProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateWithdrawal({
+  Future<void> updateTransaction({
     required String id,
     required double amount,
     required DateTime date,
@@ -79,22 +93,22 @@ class AccountProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      final withdrawal = getWithdrawalById(id);
-      if (withdrawal == null) {
+      final transaction = getTransactionById(id);
+      if (transaction == null) {
         _isLoading = false;
-        _error = 'Withdrawal not found';
+        _error = 'Transaction not found';
         notifyListeners();
         return;
       }
 
-      final updatedWithdrawal = withdrawal.copyWith(
+      final updatedTransaction = transaction.copyWith(
         amount: amount,
         date: date,
         note: note,
         updatedAt: DateTime.now(),
       );
 
-      await _databaseService.updateWithdrawal(updatedWithdrawal);
+      await _databaseService.updateAccountTransaction(updatedTransaction);
 
       _isLoading = false;
       notifyListeners();
@@ -105,12 +119,12 @@ class AccountProvider with ChangeNotifier {
     }
   }
 
-  Future<void> deleteWithdrawal(String id) async {
+  Future<void> deleteTransaction(String id) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      await _databaseService.deleteWithdrawal(id);
+      await _databaseService.deleteAccountTransaction(id);
 
       _isLoading = false;
       notifyListeners();
@@ -121,9 +135,9 @@ class AccountProvider with ChangeNotifier {
     }
   }
 
-  Withdrawal? getWithdrawalById(String id) {
+  AccountTransaction? getTransactionById(String id) {
     try {
-      return _withdrawals.firstWhere((w) => w.id == id);
+      return _transactions.firstWhere((t) => t.id == id);
     } catch (e) {
       return null;
     }

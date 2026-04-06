@@ -5,7 +5,7 @@ import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/typography.dart';
-import 'withdrawal_form_dialog.dart';
+import 'transaction_form_dialog.dart';
 
 class AccountsScreen extends StatefulWidget {
   const AccountsScreen({super.key});
@@ -14,44 +14,49 @@ class AccountsScreen extends StatefulWidget {
   State<AccountsScreen> createState() => _AccountsScreenState();
 }
 
-class _AccountsScreenState extends State<AccountsScreen> {
+class _AccountsScreenState extends State<AccountsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showWithdrawalForm(),
+        onPressed: () => _showTransactionForm(),
         child: const Icon(Icons.add),
       ),
       body: Column(
         children: [
           // Overview Cards
           _buildOverviewSection(),
-          // Withdrawals List
+          // Tab Bar
+          TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(icon: Icon(Icons.arrow_downward_rounded), text: 'Deposits'),
+              Tab(icon: Icon(Icons.arrow_upward_rounded), text: 'Withdrawals'),
+            ],
+          ),
+          // Tab Views
           Expanded(
-            child: Consumer<AccountProvider>(
-              builder: (context, accountProvider, child) {
-                if (accountProvider.isLoading) {
-                  return const LoadingWidget(message: 'Loading accounts...');
-                }
-
-                final withdrawals = accountProvider.withdrawals;
-
-                if (withdrawals.isEmpty) {
-                  return const EmptyWidget(
-                    message: 'No withdrawals found.\nTap + to add a withdrawal.',
-                    icon: Icons.account_balance_wallet_outlined,
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: withdrawals.length,
-                  itemBuilder: (context, index) {
-                    final withdrawal = withdrawals[index];
-                    return _buildWithdrawalCard(context, withdrawal);
-                  },
-                );
-              },
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildTransactionList(TransactionType.deposit),
+                _buildTransactionList(TransactionType.withdraw),
+              ],
             ),
           ),
         ],
@@ -67,8 +72,9 @@ class _AccountsScreenState extends State<AccountsScreen> {
           (sum, order) => sum + order.depositAmount,
         );
 
+        final customDeposits = accountProvider.totalDeposits;
         final totalWithdrawals = accountProvider.totalWithdrawals;
-        final currentBalance = totalDeposit - totalWithdrawals;
+        final currentBalance = totalDeposit + customDeposits - totalWithdrawals;
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -125,24 +131,35 @@ class _AccountsScreenState extends State<AccountsScreen> {
                     const SizedBox(height: 8),
                     Text(
                       '৳${NumberFormat('#,##,##0').format(currentBalance)}',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: AppFontWeights.bold,
-                            color: Theme.of(context).colorScheme.onPrimary,
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: AppFontWeights.bold,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Order Deposit: ৳${NumberFormat('#,##,##0').format(totalDeposit)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimary
+                                .withValues(alpha: 0.8),
                           ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 12),
-              // Deposit and Withdrawal Stats
+              // Custom Deposit and Withdrawal Stats
               Row(
                 children: [
                   Expanded(
                     child: _buildStatCard(
                       context,
-                      'Total Deposit',
-                      totalDeposit,
-                      Icons.payment,
+                      'Custom Deposits',
+                      customDeposits,
+                      Icons.arrow_downward_rounded,
                       Colors.green,
                     ),
                   ),
@@ -220,7 +237,48 @@ class _AccountsScreenState extends State<AccountsScreen> {
     );
   }
 
-  Widget _buildWithdrawalCard(BuildContext context, Withdrawal withdrawal) {
+  Widget _buildTransactionList(TransactionType type) {
+    return Consumer<AccountProvider>(
+      builder: (context, accountProvider, child) {
+        if (accountProvider.isLoading) {
+          return const LoadingWidget(message: 'Loading transactions...');
+        }
+
+        final transactions = type == TransactionType.deposit
+            ? accountProvider.deposits
+            : accountProvider.withdrawals;
+
+        if (transactions.isEmpty) {
+          return EmptyWidget(
+            message: type == TransactionType.deposit
+                ? 'No deposits found.\nTap + to add a deposit.'
+                : 'No withdrawals found.\nTap + to add a withdrawal.',
+            icon: type == TransactionType.deposit
+                ? Icons.arrow_downward_rounded
+                : Icons.arrow_upward_rounded,
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: transactions.length,
+          itemBuilder: (context, index) {
+            final transaction = transactions[index];
+            return _buildTransactionCard(context, transaction);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildTransactionCard(
+      BuildContext context, AccountTransaction transaction) {
+    final isDeposit = transaction.type == TransactionType.deposit;
+    final color = isDeposit ? Colors.green : Colors.red;
+    final icon = isDeposit
+        ? Icons.arrow_circle_down_outlined
+        : Icons.arrow_circle_up_outlined;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -233,12 +291,12 @@ class _AccountsScreenState extends State<AccountsScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.red[100],
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    Icons.arrow_circle_up_outlined,
-                    color: Colors.red[600],
+                    icon,
+                    color: color,
                     size: 20,
                   ),
                 ),
@@ -248,16 +306,17 @@ class _AccountsScreenState extends State<AccountsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '৳${NumberFormat('#,##,##0.##').format(withdrawal.amount)}',
-                        style: const TextStyle(
+                        '৳${NumberFormat('#,##,##0.##').format(transaction.amount)}',
+                        style: TextStyle(
                           fontWeight: AppFontWeights.bold,
                           fontSize: AppFontSizes.lg,
-                          color: Colors.red,
+                          color: color,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        DateFormat('dd MMM, yyyy').format(withdrawal.date),
+                        DateFormat('dd MMM, yyyy')
+                            .format(transaction.date),
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: AppFontSizes.sm,
@@ -268,20 +327,22 @@ class _AccountsScreenState extends State<AccountsScreen> {
                 ),
                 IconButton(
                   icon: Icon(Icons.edit, color: Colors.blue[600], size: 20),
-                  onPressed: () => _showWithdrawalForm(withdrawal: withdrawal),
+                  onPressed: () =>
+                      _showTransactionForm(transaction: transaction),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
                   icon: Icon(Icons.delete, color: Colors.red[600], size: 20),
-                  onPressed: () => _confirmDeleteWithdrawal(withdrawal),
+                  onPressed: () =>
+                      _confirmDeleteTransaction(transaction),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
               ],
             ),
-            if (withdrawal.note != null && withdrawal.note!.isNotEmpty) ...[
+            if (transaction.note != null && transaction.note!.isNotEmpty) ...[
               const SizedBox(height: 8),
               const Divider(height: 1),
               const SizedBox(height: 8),
@@ -295,7 +356,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      withdrawal.note!,
+                      transaction.note!,
                       style: TextStyle(
                         color: Colors.grey[500],
                         fontSize: AppFontSizes.sm,
@@ -314,18 +375,19 @@ class _AccountsScreenState extends State<AccountsScreen> {
     );
   }
 
-  void _showWithdrawalForm({Withdrawal? withdrawal}) {
+  void _showTransactionForm({AccountTransaction? transaction}) {
     showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => WithdrawalFormDialog(withdrawal: withdrawal),
+      builder: (context) =>
+          TransactionFormDialog(transaction: transaction),
     ).then((result) {
       if (result != null && result['success'] == true && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              withdrawal != null
-                  ? 'Withdrawal updated successfully'
-                  : 'Withdrawal added successfully',
+              transaction != null
+                  ? 'Transaction updated successfully'
+                  : 'Transaction added successfully',
             ),
             backgroundColor: Colors.green,
           ),
@@ -334,13 +396,15 @@ class _AccountsScreenState extends State<AccountsScreen> {
     });
   }
 
-  void _confirmDeleteWithdrawal(Withdrawal withdrawal) {
+  void _confirmDeleteTransaction(AccountTransaction transaction) {
+    final typeLabel =
+        transaction.type == TransactionType.deposit ? 'deposit' : 'withdrawal';
     showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Withdrawal'),
+        title: Text('Delete $typeLabel'),
         content: Text(
-          'Are you sure you want to delete this withdrawal of ৳${NumberFormat('#,##,##0.##').format(withdrawal.amount)}?',
+          'Are you sure you want to delete this $typeLabel of ৳${NumberFormat('#,##,##0.##').format(transaction.amount)}?',
         ),
         actions: [
           TextButton(
@@ -356,11 +420,13 @@ class _AccountsScreenState extends State<AccountsScreen> {
       ),
     ).then((confirmed) {
       if (confirmed == true && mounted) {
-        context.read<AccountProvider>().deleteWithdrawal(withdrawal.id);
+        context
+            .read<AccountProvider>()
+            .deleteTransaction(transaction.id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Withdrawal deleted successfully'),
+            SnackBar(
+              content: Text('$typeLabel deleted successfully'),
               backgroundColor: Colors.green,
             ),
           );

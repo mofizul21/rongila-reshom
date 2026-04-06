@@ -671,8 +671,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
     AccountProvider accountProvider,
   ) {
     // Calculate adjusted deposit
+    final totalCustomDeposits = accountProvider.totalDeposits;
     final totalWithdrawals = accountProvider.totalWithdrawals;
-    final adjustedDeposit = lifetimeDeposit - totalWithdrawals;
+    final adjustedDeposit = lifetimeDeposit + totalCustomDeposits - totalWithdrawals;
 
     return Card(
       color: Theme.of(context).colorScheme.primaryContainer,
@@ -713,6 +714,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
               lifetimeDeposit,
               Colors.green,
             ),
+            if (totalCustomDeposits > 0) ...[
+              const Divider(),
+              _buildLifetimeRow(
+                context,
+                'Custom Deposits',
+                totalCustomDeposits,
+                Colors.teal,
+              ),
+            ],
             if (totalWithdrawals > 0) ...[
               const Divider(),
               _buildLifetimeRow(
@@ -721,15 +731,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 totalWithdrawals,
                 Colors.red,
               ),
-              const Divider(),
-              _buildLifetimeRow(
-                context,
-                'Net Deposit',
-                adjustedDeposit,
-                Colors.purple,
-                isBold: true,
-              ),
             ],
+            const Divider(),
+            _buildLifetimeRow(
+              context,
+              'Net Deposit',
+              adjustedDeposit,
+              Colors.purple,
+              isBold: true,
+            ),
             const Divider(),
             _buildLifetimeRow(context, 'Total Due', lifetimeDue, Colors.red),
             const Divider(),

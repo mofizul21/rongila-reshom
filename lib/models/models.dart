@@ -7,4 +7,4 @@ export 'note.dart';
 export 'supplier.dart';
 export 'expense.dart';
 export 'payment_transaction.dart';
-export 'withdrawal.dart';
+export 'account_transaction.dart';

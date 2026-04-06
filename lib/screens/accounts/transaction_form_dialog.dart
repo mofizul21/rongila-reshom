@@ -2,33 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/account_provider.dart';
-import '../../models/withdrawal.dart';
+import '../../models/account_transaction.dart';
 
-class WithdrawalFormDialog extends StatefulWidget {
-  final Withdrawal? withdrawal;
+class TransactionFormDialog extends StatefulWidget {
+  final AccountTransaction? transaction;
 
-  const WithdrawalFormDialog({super.key, this.withdrawal});
+  const TransactionFormDialog({super.key, this.transaction});
 
   @override
-  State<WithdrawalFormDialog> createState() => _WithdrawalFormDialogState();
+  State<TransactionFormDialog> createState() => _TransactionFormDialogState();
 }
 
-class _WithdrawalFormDialogState extends State<WithdrawalFormDialog> {
+class _TransactionFormDialogState extends State<TransactionFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _amountController;
   late TextEditingController _noteController;
   late DateTime _selectedDate;
+  late TransactionType _type;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = widget.withdrawal?.date ?? DateTime.now();
+    _type = widget.transaction?.type ?? TransactionType.withdraw;
+    _selectedDate = widget.transaction?.date ?? DateTime.now();
     _amountController = TextEditingController(
-      text: widget.withdrawal?.amount.toString() ?? '',
+      text: widget.transaction?.amount.toString() ?? '',
     );
     _noteController = TextEditingController(
-      text: widget.withdrawal?.note ?? '',
+      text: widget.transaction?.note ?? '',
     );
   }
 
@@ -39,7 +41,7 @@ class _WithdrawalFormDialogState extends State<WithdrawalFormDialog> {
     super.dispose();
   }
 
-  bool get _isEditing => widget.withdrawal != null;
+  bool get _isEditing => widget.transaction != null;
 
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
@@ -71,8 +73,8 @@ class _WithdrawalFormDialogState extends State<WithdrawalFormDialog> {
     });
 
     if (_isEditing) {
-      await context.read<AccountProvider>().updateWithdrawal(
-            id: widget.withdrawal!.id,
+      await context.read<AccountProvider>().updateTransaction(
+            id: widget.transaction!.id,
             amount: amount,
             date: _selectedDate,
             note: _noteController.text.trim().isEmpty
@@ -80,7 +82,8 @@ class _WithdrawalFormDialogState extends State<WithdrawalFormDialog> {
                 : _noteController.text.trim(),
           );
     } else {
-      await context.read<AccountProvider>().addWithdrawal(
+      await context.read<AccountProvider>().addTransaction(
+            type: _type,
             amount: amount,
             date: _selectedDate,
             note: _noteController.text.trim().isEmpty
@@ -96,6 +99,9 @@ class _WithdrawalFormDialogState extends State<WithdrawalFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isDeposit = _type == TransactionType.deposit;
+    final themeColor = isDeposit ? Colors.green : Colors.red;
+
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -114,18 +120,20 @@ class _WithdrawalFormDialogState extends State<WithdrawalFormDialog> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.red[50],
+                      color: themeColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
-                      _isEditing ? Icons.edit : Icons.arrow_upward_rounded,
-                      color: Colors.red[600],
+                      _isEditing ? Icons.edit : (isDeposit ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded),
+                      color: themeColor,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      _isEditing ? 'Edit Withdrawal' : 'Add Withdrawal',
+                      _isEditing
+                          ? 'Edit Transaction'
+                          : (isDeposit ? 'Add Deposit' : 'Add Withdrawal'),
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -139,13 +147,48 @@ class _WithdrawalFormDialogState extends State<WithdrawalFormDialog> {
                 ],
               ),
               const SizedBox(height: 24),
+              // Type Selector (only for new transactions)
+              if (!_isEditing) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTypeOption(
+                        'Deposit',
+                        Icons.arrow_downward_rounded,
+                        Colors.green,
+                        _type == TransactionType.deposit,
+                        () {
+                          setState(() {
+                            _type = TransactionType.deposit;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildTypeOption(
+                        'Withdraw',
+                        Icons.arrow_upward_rounded,
+                        Colors.red,
+                        _type == TransactionType.withdraw,
+                        () {
+                          setState(() {
+                            _type = TransactionType.withdraw;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
               // Amount Field
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(
-                  labelText: 'Withdrawal Amount',
-                  prefixIcon: Icon(Icons.attach_money),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: 'Amount',
+                  prefixIcon: const Icon(Icons.attach_money),
+                  border: const OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
@@ -165,7 +208,7 @@ class _WithdrawalFormDialogState extends State<WithdrawalFormDialog> {
                 onTap: _selectDate,
                 child: InputDecorator(
                   decoration: const InputDecoration(
-                    labelText: 'Withdrawal Date',
+                    labelText: 'Date',
                     prefixIcon: Icon(Icons.calendar_today),
                     border: OutlineInputBorder(),
                   ),
@@ -200,7 +243,7 @@ class _WithdrawalFormDialogState extends State<WithdrawalFormDialog> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _handleSubmit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[600],
+                    backgroundColor: themeColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -216,7 +259,7 @@ class _WithdrawalFormDialogState extends State<WithdrawalFormDialog> {
                           ),
                         )
                       : Text(
-                          _isEditing ? 'Update Withdrawal' : 'Add Withdrawal',
+                          _isEditing ? 'Update' : (isDeposit ? 'Add Deposit' : 'Add Withdrawal'),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -226,6 +269,47 @@ class _WithdrawalFormDialogState extends State<WithdrawalFormDialog> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypeOption(
+    String label,
+    IconData icon,
+    Color color,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.grey[100],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey[300]!,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? color : Colors.grey[600],
+              size: 28,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? color : Colors.grey[700],
+              ),
+            ),
+          ],
         ),
       ),
     );

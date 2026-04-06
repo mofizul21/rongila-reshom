@@ -1,15 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Withdrawal {
+enum TransactionType { deposit, withdraw }
+
+class AccountTransaction {
   final String id;
+  final TransactionType type;
   final double amount;
   final DateTime date;
   final String? note;
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  Withdrawal({
+  AccountTransaction({
     required this.id,
+    required this.type,
     required this.amount,
     required this.date,
     this.note,
@@ -17,10 +21,13 @@ class Withdrawal {
     required this.updatedAt,
   });
 
-  factory Withdrawal.fromFirestore(DocumentSnapshot doc) {
+  factory AccountTransaction.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    return Withdrawal(
+    return AccountTransaction(
       id: doc.id,
+      type: data['type'] == 'withdraw'
+          ? TransactionType.withdraw
+          : TransactionType.deposit,
       amount: (data['amount'] ?? 0).toDouble(),
       date: (data['date'] as Timestamp).toDate(),
       note: data['note'],
@@ -31,6 +38,7 @@ class Withdrawal {
 
   Map<String, dynamic> toFirestore() {
     return {
+      'type': type == TransactionType.withdraw ? 'withdraw' : 'deposit',
       'amount': amount,
       'date': Timestamp.fromDate(date),
       'note': note,
@@ -39,16 +47,18 @@ class Withdrawal {
     };
   }
 
-  Withdrawal copyWith({
+  AccountTransaction copyWith({
     String? id,
+    TransactionType? type,
     double? amount,
     DateTime? date,
     String? note,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    return Withdrawal(
+    return AccountTransaction(
       id: id ?? this.id,
+      type: type ?? this.type,
       amount: amount ?? this.amount,
       date: date ?? this.date,
       note: note ?? this.note,
