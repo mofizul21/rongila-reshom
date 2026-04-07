@@ -270,6 +270,10 @@ class _PaymentHistoryListState extends State<PaymentHistoryList> {
     BuildContext context,
     dynamic transaction,
   ) async {
+    // Save references before async gap
+    final orderProvider = context.read<OrderProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -291,14 +295,13 @@ class _PaymentHistoryListState extends State<PaymentHistoryList> {
       ),
     );
 
-    if (confirmed == true) {
-      final orderProvider = context.read<OrderProvider>();
+    if (confirmed == true && mounted) {
       await orderProvider.deletePayment(
         orderId: widget.order.id,
         transactionId: transaction.id,
       );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        messenger.showSnackBar(
           const SnackBar(content: Text('Payment deleted')),
         );
       }

@@ -105,7 +105,7 @@ class AuthProvider with ChangeNotifier {
     return _authService.firestore.collection('users').snapshots().map(
       (snapshot) => snapshot.docs
           .map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
+            final data = doc.data();
             final roleStr = data['role'] ?? 'manager';
             final role = UserRole.values.firstWhere(
               (e) => e.toString() == 'UserRole.$roleStr' || e.name == roleStr,

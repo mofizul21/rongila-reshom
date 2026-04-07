@@ -72,6 +72,9 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
       _isLoading = true;
     });
 
+    // Save navigator reference before async operations
+    final navigator = Navigator.of(context);
+
     if (_isEditing) {
       await context.read<AccountProvider>().updateTransaction(
             id: widget.transaction!.id,
@@ -93,7 +96,7 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
     }
 
     if (context.mounted) {
-      Navigator.of(context).pop({'success': true});
+      navigator.pop({'success': true});
     }
   }
 
