@@ -147,10 +147,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDrawer(BuildContext context, AuthProvider authProvider, bool isAdmin) {
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        shrinkWrap: true,
-        children: [
+      child: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
           // Dynamic Drawer Header with Settings
           Consumer<SettingsProvider>(
             builder: (context, settings, child) {
