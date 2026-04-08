@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../widgets/common_widgets.dart';
+import '../../theme/app_colors.dart';
 
 class CustomerDetailScreen extends StatelessWidget {
   final Customer customer;
@@ -16,9 +17,10 @@ class CustomerDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Customer Details'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -47,7 +49,9 @@ class CustomerDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Card(
-            color: customer.totalDue > 0 ? Colors.red[50] : Colors.green[50],
+            color: customer.totalDue > 0 
+                ? context.semanticColors.errorContainer
+                : context.semanticColors.successContainer,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -57,7 +61,12 @@ class CustomerDetailScreen extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Total Due Amount',
-                      style: const TextStyle(fontSize: 15),
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: customer.totalDue > 0 
+                            ? context.semanticColors.onErrorContainer
+                            : context.semanticColors.onSuccessContainer,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -69,7 +78,9 @@ class CustomerDetailScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: customer.totalDue > 0 ? Colors.red : Colors.green,
+                        color: customer.totalDue > 0 
+                            ? context.semanticColors.error
+                            : context.semanticColors.success,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -197,6 +208,7 @@ class CustomerDetailScreen extends StatelessWidget {
               },
             ),
         ],
+        ),
       ),
     );
   }

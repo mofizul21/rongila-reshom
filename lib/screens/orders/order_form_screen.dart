@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
+import '../../theme/app_colors.dart';
 
 class OrderFormScreen extends StatefulWidget {
   final OrderModel? order;
@@ -341,7 +342,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  color: context.semanticColors.surfaceVariant,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -355,7 +356,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                             child: Text(
                               '${item.productName} x${item.quantity}',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: context.semanticColors.onSurfaceVariant,
                               ),
                             ),
                           ),
@@ -363,7 +364,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                             '৳${NumberFormat('#,##,##0.00').format(item.total)}',
                             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: context.semanticColors.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -428,10 +429,10 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
+                color: context.semanticColors.infoContainer,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline,
+                  color: context.semanticColors.borderColor,
                 ),
               ),
               child: Column(
@@ -447,7 +448,9 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                     'Due Amount',
                     _dueAmount,
                     isBold: true,
-                    color: _dueAmount > 0 ? Colors.red : Colors.green,
+                    color: _dueAmount > 0 
+                        ? context.semanticColors.error
+                        : context.semanticColors.success,
                   ),
                 ],
               ),
@@ -492,7 +495,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           style: TextStyle(
             fontWeight: isBold ? FontWeight.bold : null,
             fontSize: isBold ? 16 : 14,
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
+            color: context.semanticColors.onInfoContainer,
           ),
         ),
         Text(
@@ -500,7 +503,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           style: TextStyle(
             fontWeight: isBold ? FontWeight.bold : null,
             fontSize: isBold ? 18 : 16,
-            color: color ?? Theme.of(context).colorScheme.onPrimaryContainer,
+            color: color ?? context.semanticColors.onInfoContainer,
           ),
         ),
       ],

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/order_provider.dart';
 import '../../models/order.dart';
+import '../../theme/app_colors.dart';
 
 class AddPaymentDialog extends StatefulWidget {
   final OrderModel order;
@@ -106,12 +107,12 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.green[50],
+                      color: context.semanticColors.successContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       Icons.payment,
-                      color: Colors.green[600],
+                      color: context.semanticColors.primaryIcon,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -131,7 +132,7 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
                           widget.order.customerName,
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: context.semanticColors.secondaryText,
                           ),
                         ),
                       ],
@@ -148,9 +149,9 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue[50],
+                  color: context.semanticColors.infoContainer,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue[200]!),
+                  border: Border.all(color: context.semanticColors.borderColor),
                 ),
                 child: Column(
                   children: [
@@ -165,10 +166,12 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
                     ),
                     const SizedBox(height: 8),
                     _buildInfoRow(
-                      'Remaining Due',
+                      'Due Amount',
                       '৳${_remainingDue.toStringAsFixed(2)}',
                       isBold: true,
-                      color: _remainingDue > 0 ? Colors.red : Colors.green,
+                      color: _remainingDue > 0 
+                          ? context.semanticColors.error
+                          : context.semanticColors.success,
                     ),
                   ],
                 ),
@@ -279,6 +282,7 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
           style: TextStyle(
             fontWeight: isBold ? FontWeight.bold : null,
             fontSize: isBold ? 16 : 14,
+            color: context.semanticColors.onInfoContainer,
           ),
         ),
         Text(
@@ -286,7 +290,7 @@ class _AddPaymentDialogState extends State<AddPaymentDialog> {
           style: TextStyle(
             fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
             fontSize: isBold ? 18 : 15,
-            color: color,
+            color: color ?? context.semanticColors.onInfoContainer,
           ),
         ),
       ],
