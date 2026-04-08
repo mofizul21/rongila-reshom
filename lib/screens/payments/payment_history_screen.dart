@@ -24,8 +24,9 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
       appBar: AppBar(
         title: const Text('Payment History'),
       ),
-      body: Column(
-        children: [
+      body: SafeArea(
+        child: Column(
+          children: [
           // Filter and View Mode Toggle
           Padding(
             padding: const EdgeInsets.all(16),
@@ -106,6 +107,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

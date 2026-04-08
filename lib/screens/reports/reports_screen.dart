@@ -99,8 +99,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
+      body: SafeArea(
+        child: Column(
+          children: [
           // Month/Year Selector
           _buildMonthYearSelector(),
           // Stats
@@ -267,6 +268,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

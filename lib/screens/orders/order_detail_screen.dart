@@ -37,7 +37,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           final updatedOrder = orderProvider.getOrderById(widget.order.id);
           // Use updated order if available, otherwise use the original widget.order
           final order = updatedOrder ?? widget.order;
-          return _buildBody(order);
+          return SafeArea(
+            child: _buildBody(order),
+          );
         },
       ),
     );

@@ -173,9 +173,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
           // Store Information Section
           _buildSectionTitle('Store Information'),
           const SizedBox(height: 12),
@@ -201,6 +202,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 12),
           _buildAppInfoCard(),
         ],
+        ),
       ),
     );
   }

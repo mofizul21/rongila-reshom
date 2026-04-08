@@ -219,11 +219,12 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
       appBar: AppBar(
         title: Text(isEdit ? 'Edit Order' : 'New Order'),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
             TextFormField(
               controller: _customerNameController,
               decoration: const InputDecoration(
@@ -340,7 +341,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -353,14 +354,16 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                           Expanded(
                             child: Text(
                               '${item.productName} x${item.quantity}',
-                              style: const TextStyle(fontSize: 14),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ),
                           Text(
                             '৳${NumberFormat('#,##,##0.00').format(item.total)}',
-                            style: const TextStyle(
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -425,9 +428,11 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: Theme.of(context).colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue[200]!),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
               ),
               child: Column(
                 children: [
@@ -473,6 +478,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           ],
         ),
       ),
+      ),
     );
   }
 
@@ -486,6 +492,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           style: TextStyle(
             fontWeight: isBold ? FontWeight.bold : null,
             fontSize: isBold ? 16 : 14,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
         ),
         Text(
@@ -493,7 +500,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           style: TextStyle(
             fontWeight: isBold ? FontWeight.bold : null,
             fontSize: isBold ? 18 : 16,
-            color: color,
+            color: color ?? Theme.of(context).colorScheme.onPrimaryContainer,
           ),
         ),
       ],
