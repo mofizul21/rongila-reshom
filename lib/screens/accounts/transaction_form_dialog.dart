@@ -104,19 +104,26 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
   Widget build(BuildContext context) {
     final isDeposit = _type == TransactionType.deposit;
     final themeColor = isDeposit ? Colors.green : Colors.red;
+    final keyboardInsets = MediaQuery.of(context).viewInsets.bottom;
 
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: keyboardInsets),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
               // Header
               Row(
                 children: [
@@ -270,8 +277,12 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
                         ),
                 ),
               ),
-            ],
-          ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
